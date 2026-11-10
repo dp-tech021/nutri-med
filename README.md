@@ -12,10 +12,10 @@ Plataforma web para clientes encontrarem prestadores, solicitarem orçamentos e 
 
 ## Limitações conhecidas
 - Upload de imagens está **desativado** até inspeção segura.
-- Busca textual de prefixo ainda não está implementada; parâmetro `q` devolve `SEARCH_NOT_YET_IMPLEMENTED`.
-- Paginação inicial usa offset, não cursor estável. Filtros de cidade e categoria ainda são correspondência exata.
-- Sem rate limiting distribuído, testes de concorrência/integrados, seed de categorias, validação SMTP externo e revisão de acessibilidade.
-- A recuperação de senha foi iniciada, mas o fluxo de definir a nova senha pelo link ainda precisa de tela.
+- Busca por prefixo de serviço ou nome público do prestador e filtros normalizados foram codificados, **mas ainda não testados com PostgreSQL real**.
+- Paginação por cursor ordenado por data + UUID foi codificada, ainda sem validação de desempenho/concorrência.
+- Há limite transacional por conta nas operações privadas e seed de categorias; faltam proteção contra abuso nos endpoints públicos, testes de concorrência executados, SMTP externo e revisão de acessibilidade.
+- Há tela de atualização de senha após link de recuperação; o fluxo de e-mail ainda precisa de teste real.
 - Não usar dados pessoais reais, não ativar billing ou deploy.
 
 ## Pré-requisitos
@@ -47,7 +47,7 @@ npm test
 npm run build
 npx supabase db reset
 ```
-Esses comandos são instruções, **não evidência de que passaram**. O ambiente desta revisão não possui Docker e não conseguiu instalar dependências para teste integrado.
+Esses comandos são instruções, **não evidência de que passaram**. O script `npm run test:integration` cria três contas sintéticas e testa o fluxo completo na stack local, mas ainda não foi executado. O ambiente desta revisão não possui Docker e não conseguiu instalar dependências para teste integrado.
 
 ### Roteiro de QA obrigatório
 1. Criar cliente, prestador e terceiro sem vínculo em ambiente de teste; verificar e-mail.
@@ -71,5 +71,14 @@ Valores monetários são inteiros em centavos (BRL). Condições aceitas são co
 
 ## Custo zero, colaboração e fontes
 Supabase Free possui quotas e pode pausar projetos pouco ativos. Cloudflare Pages Free pode hospedar o frontend futuramente. Nenhum recurso remoto foi criado nesta etapa. Para a dupla: uma pessoa revisa banco/API e a outra frontend/UX; PRs pequenos e revisão cruzada.
+
+### Teste integrado local
+```bash
+export TEST_SUPABASE_URL=http://127.0.0.1:54321
+export TEST_SUPABASE_ANON_KEY='CHAVE_PUBLICA_LOCAL'
+export TEST_SUPABASE_SERVICE_ROLE_KEY='CHAVE_SERVICE_ROLE_LOCAL_SOMENTE_NESTE_TERMINAL'
+npm run test:integration
+```
+Nunca cole a chave administrativa neste chat, em commits ou na interface web. Confirme que a URL aponta **somente** para localhost; o teste cria contas, anúncios e pedidos artificiais. Não rode contra produção.
 
 Documentação oficial: https://supabase.com/docs/guides/local-development ; https://supabase.com/docs/guides/functions/auth ; https://supabase.com/docs/guides/platform/free-project-pausing
