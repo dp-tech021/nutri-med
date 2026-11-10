@@ -77,6 +77,10 @@ async function handle(req: Request) {
   const parts = path.split('/').filter(Boolean);
   const method = req.method;
   if (method === 'GET' && path === '/health') return reply({ok:true});
+  if (method === 'GET' && path === '/categories') {
+    const {data,error}=await db.from('categories').select('slug,label').order('label',{ascending:true});
+    check(error); return reply(data);
+  }
   if (method === 'GET' && path === '/catalog') {
     const query = new URL(req.url).searchParams;
     const limitRaw = query.get('limit') || '20';
