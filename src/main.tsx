@@ -121,6 +121,33 @@ function NewService(){
   async function submit(e:React.FormEvent){e.preventDefault();try{await api('/services','POST',{...p,price_cents:p.price_type==='orcamento'?null:Math.round(Number(p.price_cents)*100)},session);navigate('/dashboard');}catch(e){setError(errorMessage(e));}}
   return <Layout><h1 className="text-2xl font-bold">Publicar serviço</h1><form className="card max-w-xl mt-4" onSubmit={e=>void submit(e)}>{(['title','description','city'] as const).map(k=><label key={k} className="field">{({title:'Título',description:'Descrição',city:'Cidade'})[k]}<input required minLength={k==='description'?10:2} value={p[k]} onChange={e=>setP({...p,[k]:e.target.value})}/></label>)}<label className="field">Categoria<select value={p.category} required onChange={e=>setP({...p,category:e.target.value})}><option value="">Selecione</option>{categories.map(c=><option key={c.slug} value={c.slug}>{c.label}</option>)}</select></label><label className="field">Modalidade<select value={p.modality} onChange={e=>setP({...p,modality:e.target.value})}><option value="presencial">Presencial</option><option value="online">Online</option></select></label><label className="field">Preço<select value={p.price_type} onChange={e=>setP({...p,price_type:e.target.value})}><option value="orcamento">Sob orçamento</option><option value="fixo">Fixo</option><option value="inicial">A partir de</option></select></label>{p.price_type!=='orcamento'&&<label className="field">Valor (R$)<input required type="number" min="0" max="1000000" step=".01" value={p.price_cents} onChange={e=>setP({...p,price_cents:e.target.value})}/></label>}<button className="btn">Publicar</button><Notice error={error}/></form></Layout>;
 }
+function EditService(){
+  const {id}=useParams(),{session}=useApp();const navigate=useNavigate();
+  const [item,setItem]=useState<Service|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+  useEffect(()=>{if(session)void api<Service[]>('/my/services','GET',undefined,session).then(items=>{
+    const chosen=items.find(s=>s.id===id);if(chosen)setItem(chosen);else setError('Serviço não encontrado ou sem autorização');
+  }).catch(e=>setError(errorMessage(e)));},[session,id]);
+  async function submit(e:React.FormEvent){e.preventDefault();if(!item)return;setBusy(true);setError('');
+    try{await api('/services/'+id,'PATCH',{
+      title:item.title,description:item.description,city:item.city,category:item.category,modality:item.modality,
+      price_type:item.price_type,price_cents:item.price_type==='orcamento'?null:item.price_cents,active:item.active??true
+    },session);navigate('/dashboard');}catch(e){setError(errorMessage(e));}finally{setBusy(false);}
+  }
+  if(!item)return <Layout><Notice error={error||'Carregando serviço...'} /></Layout>;
+  return <Layout><h1 className="text-2xl font-bold">Editar anúncio</h1>
+    <p className="my-3 muted">Mudanças não alteram pedidos anteriores nem propostas aceitas.</p>
+    <form className="card max-w-xl" onSubmit={e=>void submit(e)}>
+      <label className="field">Título<input required minLength={3} maxLength={120} value={item.title} onChange={e=>setItem({...item,title:e.target.value})}/></label>
+      <label className="field">Descrição<textarea required minLength={10} maxLength={2000} value={item.description} onChange={e=>setItem({...item,description:e.target.value})}/></label>
+      <label className="field">Cidade<input required minLength={2} value={item.city} onChange={e=>setItem({...item,city:e.target.value})}/></label>
+      <label className="field">Modalidade<select value={item.modality} onChange={e=>setItem({...item,modality:e.target.value})}><option value="presencial">Presencial</option><option value="online">Online</option></select></label>
+      <label className="field">Preço<select value={item.price_type} onChange={e=>setItem({...item,price_type:e.target.value,price_cents:e.target.value==='orcamento'?null:item.price_cents??0})}><option value="orcamento">Sob orçamento</option><option value="fixo">Fixo</option><option value="inicial">A partir de</option></select></label>
+      {item.price_type!=='orcamento'&&<label className="field">Valor em centavos (BRL)<input type="number" min="0" max="100000000" step="1" required value={item.price_cents??''} onChange={e=>setItem({...item,price_cents:Number(e.target.value)})}/></label>}
+      <label className="field">Status<select value={item.active?'ativo':'inativo'} onChange={e=>setItem({...item,active:e.target.value==='ativo'})}><option value="ativo">Ativo</option><option value="inativo">Desativado</option></select></label>
+      <button className="btn" disabled={busy}>Salvar alterações</button><Notice error={error}/>
+    </form>
+  </Layout>;
+}
 function RequestDetails(){
   const {id}=useParams(),{session,profile}=useApp();const [data,setData]=useState<{request:RequestItem;proposals:Proposal[];events:{action:string;to_status:string;created_at:string}[];contract:Proposal|null}|null>(null),[error,setError]=useState(''),[scope,setScope]=useState(''),[price,setPrice]=useState(''),[days,setDays]=useState('7'),[busy,setBusy]=useState(false);
   async function load(){try{setData(await api('/requests/'+id,'GET',undefined,session));}catch(e){setError(errorMessage(e));}}
@@ -140,7 +167,7 @@ function Dashboard(){
   const {session,profile}=useApp();const [services,setServices]=useState<Service[]>([]),[requests,setRequests]=useState<RequestItem[]>([]),[error,setError]=useState('');
   useEffect(()=>{if(!session||!profile)return;void api<RequestItem[]>('/requests','GET',undefined,session).then(setRequests).catch(e=>setError(errorMessage(e)));if(profile.kind==='prestador')void api<Service[]>('/my/services','GET',undefined,session).then(setServices).catch(e=>setError(errorMessage(e)));},[session,profile]);
   async function deactivate(id:string){if(!window.confirm('Desativar anúncio? Pedidos anteriores serão preservados.'))return;try{await api('/services/'+id,'PATCH',{active:false},session);setServices(s=>s.map(x=>x.id===id?{...x,active:false}:x));}catch(e){setError(errorMessage(e));}}
-  return <Layout><h1 className="text-3xl font-bold">Painel {profile?.kind==='prestador'?'do prestador':'do cliente'}</h1><Notice error={error}/>{profile?.kind==='prestador'&&<><p className="my-4"><Link className="btn" to="/novo-servico">Publicar serviço</Link></p><h2 className="font-semibold text-xl my-3">Meus anúncios</h2><div className="grid gap-3">{services.map(s=><div className="card" key={s.id}><strong>{s.title}</strong> — {s.city} <button className="btn btn-outline ml-3" onClick={()=>void deactivate(s.id)}>Desativar</button></div>)}</div></>}
+  return <Layout><h1 className="text-3xl font-bold">Painel {profile?.kind==='prestador'?'do prestador':'do cliente'}</h1><Notice error={error}/>{profile?.kind==='prestador'&&<><p className="my-4"><Link className="btn" to="/novo-servico">Publicar serviço</Link></p><h2 className="font-semibold text-xl my-3">Meus anúncios</h2><div className="grid gap-3">{services.map(s=><div className="card" key={s.id}><strong>{s.title}</strong> — {s.city} <Link className="ml-3" to={'/editar-servico/'+s.id}>Editar</Link> <button className="btn btn-outline ml-3" onClick={()=>void deactivate(s.id)}>Desativar</button></div>)}</div></>}
     <h2 className="font-semibold text-xl my-4">Solicitações e atendimentos</h2><div className="grid gap-3">{requests.map(r=><Link className="card block" key={r.id} to={'/pedido/'+r.id}><strong>{r.snapshot_title}</strong><p>{r.status.replaceAll('_',' ')}</p></Link>)}{!requests.length&&<p>Nenhuma solicitação ainda.</p>}</div></Layout>;
 }
 function App(){
@@ -151,7 +178,7 @@ function App(){
   return <Context.Provider value={{session,profile,refresh:async()=>refresh()}}><BrowserRouter><Routes>
     <Route path="/" element={<Catalog/>}/><Route path="/login" element={<Auth mode="login"/>}/><Route path="/cadastro" element={<Auth mode="cadastro"/>}/><Route path="/recuperar" element={<Auth mode="recuperar"/>}/><Route path="/atualizar-senha" element={<ResetPassword/>}/><Route path="/servico/:id" element={<Details/>}/><Route path="/prestador/:id" element={<PublicProvider/>}/>
     <Route path="/dashboard" element={!session?<Navigate to="/login"/>:!profile?<SetupProfile/>:<Dashboard/>}/>
-    <Route path="/novo-servico" element={!session?<Navigate to="/login"/>:profile?.kind!=='prestador'?<Navigate to="/dashboard"/>:<NewService/>}/>
+    <Route path="/novo-servico" element={!session?<Navigate to="/login"/>:profile?.kind!=='prestador'?<Navigate to="/dashboard"/>:<NewService/>}/><Route path="/editar-servico/:id" element={!session?<Navigate to="/login"/>:profile?.kind!=='prestador'?<Navigate to="/dashboard"/>:<EditService/>}/>
     <Route path="/pedido/:id" element={!session?<Navigate to="/login"/>:<RequestDetails/>}/>
     <Route path="*" element={<Layout><h1>Página não encontrada</h1><Link to="/">Voltar ao início</Link></Layout>}/>
   </Routes></BrowserRouter></Context.Provider>;
