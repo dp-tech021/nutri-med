@@ -154,9 +154,13 @@ async function handle(req: Request) {
     const kind=getString(p,'kind',1,20);
     if(!['cliente','prestador'].includes(kind)) bad(400,'INVALID_ROLE');
     const record={user_id:u.id,kind,display_name:getString(p,'display_name',2,100),city:typeof p.city==='string'?getString(p,'city',0,100):'',category:typeof p.category==='string'?getString(p,'category',0,100):'',about:typeof p.about==='string'?getString(p,'about',0,1000):''};
-    const {data:old}=await db.from('profiles').select('*').eq('user_id',u.id).maybeSingle();
-    if (old) {if(old.kind!==kind) bad(409,'ROLE_IMMUTABLE');return reply(old);}
-    const {data,error}=await db.from('profiles').insert(record).select().single();check(error);return reply(data,201);
+    // INSERT ... ON CONFLICT DO NOTHING evita duplicar o perfil em cadastros concorrentes.
+    const {error:writeError}=await db.from('profiles').upsert(record,{onConflict:'user_id',ignoreDuplicates:true});
+    check(writeError);
+    const {data:stored,error:readError}=await db.from('profiles').select('*').eq('user_id',u.id).single();
+    check(readError);
+    if(stored.kind!==kind)bad(409,'ROLE_IMMUTABLE');
+    return reply(stored,201);
   }
   if(method==='GET' && path==='/me') {
     const u=await actor(req); return reply(await profile(u.id));
