@@ -80,11 +80,11 @@ async function handle(req: Request) {
   if (method === 'GET' && path === '/catalog') {
     const query = new URL(req.url).searchParams;
     const limitRaw = query.get('limit') || '20';
-    if(!/^\\d{1,2}$/.test(limitRaw)) bad(400,'INVALID_LIMIT');
+    if(!/^\d{1,2}$/.test(limitRaw)) bad(400,'INVALID_LIMIT');
     const size = int(Number(limitRaw),1,50);
     const normal = (s:string) => textPrefix(s);
     const qRaw=query.get('q')?.trim() ?? '';
-    if(qRaw && (qRaw.length<2||qRaw.length>60||!(/^[\\p{L}\\p{N} \\-]+$/u).test(qRaw)))bad(400,'INVALID_SEARCH');
+    if(qRaw && (qRaw.length<2||qRaw.length>60||!(/^[\p{L}\p{N} \-]+$/u).test(qRaw)))bad(400,'INVALID_SEARCH');
     const where=query.get('search_in')||'service';
     if(!['service','provider'].includes(where))bad(400,'INVALID_SEARCH_FIELD');
     const modal=query.get('modality');
@@ -103,7 +103,7 @@ async function handle(req: Request) {
     if(cursor){
       try{
         const parsed=JSON.parse(atob(cursor));
-        if(typeof parsed?.at!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T/.test(parsed.at)||typeof parsed?.id!=='string')bad(400,'INVALID_CURSOR');
+        if(typeof parsed?.at!=='string'||!/^\d{4}-\d{2}-\d{2}T/.test(parsed.at)||typeof parsed?.id!=='string')bad(400,'INVALID_CURSOR');
         id(parsed.id);
         const time=new Date(parsed.at).toISOString();
         // Double ordering: creation timestamp then UUID as deterministic tiebreaker.
