@@ -88,10 +88,11 @@ create or replace function public.mutate_request(
 ) returns public.requests
 language plpgsql security definer set search_path = ''
 as $$
-declare r public.requests; v public.proposals; target text;
+declare r public.requests; v public.proposals; target text; old_status text;
 begin
   select * into r from public.requests where id = p_request for update;
   if not found then raise exception 'REQUEST_NOT_FOUND' using errcode = 'P0002'; end if;
+  old_status := r.status;
   if p_action in ('enviar_proposta','revisar_proposta','recusar_pedido','iniciar','finalizar') and r.provider_id <> p_actor then
     raise exception 'FORBIDDEN' using errcode = '42501';
   end if;
@@ -129,16 +130,20 @@ begin
   end if;
   update public.requests set status=target,updated_at=now() where id=r.id returning * into r;
   insert into public.request_events(request_id,actor_id,action,from_status,to_status)
-    values(r.id,p_actor,p_action,(select case when p_action='enviar_proposta' then 'aguardando_proposta'
-       when p_action='revisar_proposta' then 'proposta_enviada'
-       when p_action='aceitar' then 'proposta_enviada'
-       when p_action='recusar_pedido' then 'aguardando_proposta'
-       when p_action='cancelar' then 'aguardando_proposta/proposta_enviada'
-       when p_action='recusar_proposta' then 'proposta_enviada'
-       when p_action='iniciar' then 'contratado'
-       when p_action='finalizar' then 'em_andamento'
-       when p_action='confirmar' then 'aguardando_confirmacao' end),target);
+    values(r.id,p_actor,p_action,old_status,target);
   return r;
 end $$;
 revoke all on function public.mutate_request(uuid,uuid,text,integer,integer,integer,text) from public, anon, authenticated;
 grant execute on function public.mutate_request(uuid,uuid,text,integer,integer,integer,text) to service_role;
+
+-- Criação do pedido e primeiro evento na mesma transação.
+create or replace function public.log_request_creation() returns trigger
+language plpgsql security definer set search_path = ''
+as $$
+begin
+  insert into public.request_events(request_id,actor_id,action,from_status,to_status)
+    values (new.id,new.client_id,'criar',null,new.status);
+  return new;
+end $$;
+create trigger requests_after_insert after insert on public.requests for each row execute function public.log_request_creation();
+revoke all on function public.log_request_creation() from public, anon, authenticated;
