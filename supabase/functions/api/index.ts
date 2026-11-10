@@ -79,20 +79,48 @@ async function handle(req: Request) {
   if (method === 'GET' && path === '/health') return reply({ok:true});
   if (method === 'GET' && path === '/catalog') {
     const query = new URL(req.url).searchParams;
-    const size = Math.min(50,Math.max(1,Number(query.get('limit') || 20)));
-    if (!Number.isInteger(size)) bad(400,'INVALID_LIMIT');
-    const page = int(Number(query.get('page') || 0),0,100);
-    let q = db.from('services').select('id,title,description,category,city,modality,price_type,price_cents,created_at,owner_id,profiles!services_owner_id_fkey(display_name)', {count:'exact'}).eq('active',true);
-    for (const filter of ['category','city','modality']) {
-      const value=query.get(filter);
-      if(value) { if (value.length > 100) bad(400,'INVALID_FILTER'); q=q.eq(filter,value); }
+    const limitRaw = query.get('limit') || '20';
+    if(!/^\\d{1,2}$/.test(limitRaw)) bad(400,'INVALID_LIMIT');
+    const size = int(Number(limitRaw),1,50);
+    const normal = (s:string) => textPrefix(s);
+    const qRaw=query.get('q')?.trim() ?? '';
+    if(qRaw && (qRaw.length<2||qRaw.length>60||!(/^[\\p{L}\\p{N} \\-]+$/u).test(qRaw)))bad(400,'INVALID_SEARCH');
+    const where=query.get('search_in')||'service';
+    if(!['service','provider'].includes(where))bad(400,'INVALID_SEARCH_FIELD');
+    const modal=query.get('modality');
+    if(modal&&!['online','presencial'].includes(modal))bad(400,'INVALID_MODALITY');
+    let qry = db.from('services').select('id,title,description,category,city,modality,price_type,price_cents,created_at,profiles!inner(display_name,search_name)').eq('active',true);
+    for(const [input,column] of [['category','search_category'],['city','search_city']] as const){
+      const value=query.get(input);
+      if(value){if(value.length>100)bad(400,'INVALID_FILTER');qry=qry.eq(column,normal(value));}
     }
-    q=q.order('created_at',{ascending:false}).order('id',{ascending:false}).range(page*size,(page+1)*size-1);
-    const {data,error,count}=await q; check(error);
-    const result=(data ?? []).map(x=>({...x,owner_id:undefined,provider_name:(x.profiles as unknown as {display_name:string})?.display_name,profiles:undefined}));
-    const term=query.get('q');
-    if (term) bad(400,'SEARCH_NOT_YET_IMPLEMENTED');
-    return reply({items:result,total:count,page,limit:size});
+    if(modal)qry=qry.eq('modality',modal);
+    if(qRaw) {
+      const value=normal(qRaw)+'%';
+      qry=where==='service'?qry.like('search_title',value):qry.like('profiles.search_name',value);
+    }
+    const cursor=query.get('cursor');
+    if(cursor){
+      try{
+        const parsed=JSON.parse(atob(cursor));
+        if(typeof parsed?.at!=='string'||!/^\\d{4}-\\d{2}-\\d{2}T/.test(parsed.at)||typeof parsed?.id!=='string')bad(400,'INVALID_CURSOR');
+        id(parsed.id);
+        const time=new Date(parsed.at).toISOString();
+        // Double ordering: creation timestamp then UUID as deterministic tiebreaker.
+        qry=qry.or(`created_at.lt.${time},and(created_at.eq.${time},id.lt.${parsed.id})`);
+      }catch{bad(400,'INVALID_CURSOR');}
+    }
+    const {data,error}=await qry.order('created_at',{ascending:false}).order('id',{ascending:false}).limit(size+1);
+    check(error);
+    const rows=data??[];
+    const hasMore=rows.length>size;
+    const page=rows.slice(0,size);
+    const last=page.at(-1);
+    const next_cursor=hasMore&&last?btoa(JSON.stringify({at:last.created_at,id:last.id})):null;
+    const items=page.map((x:Record<string,unknown>)=>({id:x.id,title:x.title,description:x.description,
+      category:x.category,city:x.city,modality:x.modality,price_type:x.price_type,price_cents:x.price_cents,
+      provider_name:(x.profiles as {display_name:string})?.display_name}));
+    return reply({items,next_cursor,limit:size});
   }
   if (method === 'GET' && parts[0] === 'services' && parts[1]) {
     const {data,error}=await db.from('services').select('id,title,description,category,city,modality,price_type,price_cents,owner_id').eq('id',id(parts[1])).eq('active',true).maybeSingle();check(error);
