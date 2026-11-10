@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
-    "api:serve": "supabase functions serve api --no-verify-jwt"
+    "api:serve": "supabase functions serve api --no-verify-jwt",
+    "test:integration": "node --test tests/integration.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.0.0",
