@@ -202,7 +202,7 @@ async function handle(req: Request) {
     if(s.owner_id===user.id)bad(403,'SELF_REQUEST');
     const date=p.desired_date==null?null:getString(p,'desired_date',10,10);
     if(date&&!/^\d{4}-\d{2}-\d{2}$/.test(date))bad(400,'INVALID_DATE');
-    const {data,error}=await db.from('requests').insert({client_id:user.id,provider_id:s.owner_id,service_id:s.id,snapshot_title:s.title,snapshot_description:s.description,need:getString(p,'need',10,2000),desired_date:date}).select().single();check(error);
+    const {data,error}=await db.from('requests').insert({client_id:user.id,provider_id:s.owner_id,service_id:s.id,snapshot_title:s.title,snapshot_description:s.description,snapshot_category:s.category,snapshot_city:s.city,snapshot_modality:s.modality,snapshot_price_type:s.price_type,snapshot_price_cents:s.price_cents,need:getString(p,'need',10,2000),desired_date:date}).select().single();check(error);
     return reply(data,201);
   }
   if(method==='GET'&&path==='/requests') {
