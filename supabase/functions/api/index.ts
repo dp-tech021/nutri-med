@@ -137,6 +137,17 @@ async function handle(req: Request) {
     const {data:p}=await db.from('profiles').select('user_id,display_name,city,about,category').eq('user_id',data.owner_id).single();
     return reply({service:{...data,owner_id:undefined},provider:p});
   }
+  if (method === 'GET' && parts[0] === 'providers' && parts[1]) {
+    const providerId=id(parts[1]);
+    const {data:p,error:pe}=await db.from('profiles').select('display_name,city,category,about').eq('user_id',providerId).eq('kind','prestador').maybeSingle();
+    check(pe);
+    if(!p)bad(404,'PROVIDER_NOT_FOUND');
+    const {data:services,error:se}=await db.from('services')
+      .select('id,title,description,category,city,modality,price_type,price_cents')
+      .eq('owner_id',providerId).eq('active',true).order('created_at',{ascending:false}).limit(30);
+    check(se);
+    return reply({provider:p,services});
+  }
   if (method === 'POST' && path === '/profiles') {
     const u=await actor(req); await limitWrite(u.id,'profile_create',10); const p=await parseBody(req);
     whitelist(p,['kind','display_name','city','category','about']);
