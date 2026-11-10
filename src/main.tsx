@@ -92,10 +92,22 @@ function Catalog(){
   </Layout>;
 }
 function Details(){
-  const {id}=useParams(),{session,profile}=useApp();const navigate=useNavigate();const [item,setItem]=useState<{service:Service;provider:{display_name:string;about:string}}|null>(null),[need,setNeed]=useState(''),[date,setDate]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+  const {id}=useParams(),{session,profile}=useApp();const navigate=useNavigate();const [item,setItem]=useState<{service:Service;provider:{user_id:string;display_name:string;about:string}}|null>(null),[need,setNeed]=useState(''),[date,setDate]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
   useEffect(()=>{void api<typeof item>('/services/'+id).then(setItem).catch(e=>setError(errorMessage(e)));},[id]);
   async function request(event:React.FormEvent){event.preventDefault();if(!session)return navigate('/login');setBusy(true);setError('');try{await api('/requests','POST',{service_id:id,need,desired_date:date||null},session);navigate('/dashboard');}catch(e){setError(errorMessage(e));}finally{setBusy(false);}}
-  return <Layout>{!item?<Notice error={error||'Carregando...'} />:<><h1 className="text-3xl font-bold">{item.service.title}</h1><p className="my-3">{item.service.description}</p><p>{item.provider?.display_name} • {item.service.city} • {item.service.modality}</p><p className="font-semibold my-3">{money(item.service.price_cents)}</p>{profile?.kind==='prestador'?<p>Entre como cliente para solicitar orçamento.</p>:<form className="card max-w-xl mt-4" onSubmit={e=>void request(e)}><h2 className="font-semibold text-xl">Solicitar orçamento</h2><label className="field">Descreva sua necessidade<textarea required minLength={10} maxLength={2000} value={need} onChange={e=>setNeed(e.target.value)}/></label><label className="field">Data desejada<input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label><button className="btn" disabled={busy}>{session?'Enviar solicitação':'Entrar para continuar'}</button><Notice error={error}/></form>}</>}</Layout>;
+  return <Layout>{!item?<Notice error={error||'Carregando...'} />:<><h1 className="text-3xl font-bold">{item.service.title}</h1><p className="my-3">{item.service.description}</p><p><Link to={'/prestador/'+item.provider.user_id}>{item.provider?.display_name}</Link> • {item.service.city} • {item.service.modality}</p><p className="font-semibold my-3">{money(item.service.price_cents)}</p>{profile?.kind==='prestador'?<p>Entre como cliente para solicitar orçamento.</p>:<form className="card max-w-xl mt-4" onSubmit={e=>void request(e)}><h2 className="font-semibold text-xl">Solicitar orçamento</h2><label className="field">Descreva sua necessidade<textarea required minLength={10} maxLength={2000} value={need} onChange={e=>setNeed(e.target.value)}/></label><label className="field">Data desejada<input type="date" value={date} onChange={e=>setDate(e.target.value)}/></label><button className="btn" disabled={busy}>{session?'Enviar solicitação':'Entrar para continuar'}</button><Notice error={error}/></form>}</>}</Layout>;
+}
+function PublicProvider(){
+  const {id}=useParams();
+  const [data,setData]=useState<{provider:{display_name:string;about:string;city:string;category:string};services:Service[]}|null>(null);
+  const [error,setError]=useState('');
+  useEffect(()=>{void api<typeof data>('/providers/'+id).then(setData).catch(e=>setError(errorMessage(e)));},[id]);
+  return <Layout>{!data?<Notice error={error||'Carregando perfil...'} />:<>
+    <h1 className="text-3xl font-bold">{data.provider.display_name}</h1>
+    <p className="my-3">{data.provider.city} • {data.provider.category}</p>
+    <p className="my-3">{data.provider.about}</p><h2 className="text-xl font-semibold">Serviços ativos</h2>
+    <div className="grid md:grid-cols-2 gap-3">{data.services.map(s=><Link className="card" key={s.id} to={'/servico/'+s.id}>{s.title} — {money(s.price_cents)}</Link>)}</div>
+  </>}</Layout>;
 }
 function SetupProfile(){
   const {session,refresh}=useApp();const [name,setName]=useState(''),[kind,setKind]=useState<'cliente'|'prestador'>('cliente'),[city,setCity]=useState(''),[category,setCategory]=useState(''),[about,setAbout]=useState(''),[error,setError]=useState('');
@@ -137,7 +149,7 @@ function App(){
   useEffect(()=>{void refresh();const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,s)=>{void refresh(s);});return()=>subscription.unsubscribe();},[]);
   if(!ready)return <p className="p-8">Iniciando sessão...</p>;
   return <Context.Provider value={{session,profile,refresh:async()=>refresh()}}><BrowserRouter><Routes>
-    <Route path="/" element={<Catalog/>}/><Route path="/login" element={<Auth mode="login"/>}/><Route path="/cadastro" element={<Auth mode="cadastro"/>}/><Route path="/recuperar" element={<Auth mode="recuperar"/>}/><Route path="/atualizar-senha" element={<ResetPassword/>}/><Route path="/servico/:id" element={<Details/>}/>
+    <Route path="/" element={<Catalog/>}/><Route path="/login" element={<Auth mode="login"/>}/><Route path="/cadastro" element={<Auth mode="cadastro"/>}/><Route path="/recuperar" element={<Auth mode="recuperar"/>}/><Route path="/atualizar-senha" element={<ResetPassword/>}/><Route path="/servico/:id" element={<Details/>}/><Route path="/prestador/:id" element={<PublicProvider/>}/>
     <Route path="/dashboard" element={!session?<Navigate to="/login"/>:!profile?<SetupProfile/>:<Dashboard/>}/>
     <Route path="/novo-servico" element={!session?<Navigate to="/login"/>:profile?.kind!=='prestador'?<Navigate to="/dashboard"/>:<NewService/>}/>
     <Route path="/pedido/:id" element={!session?<Navigate to="/login"/>:<RequestDetails/>}/>
