@@ -50,6 +50,11 @@ async function actor(req: Request, verified = false) {
   if (verified && !data.user.email_confirmed_at) bad(403, 'EMAIL_NOT_VERIFIED');
   return data.user;
 }
+async function limitWrite(uid:string, action:string, cap:number) {
+  const {data,error}=await db.rpc('consume_action_limit',{p_user:uid,p_action:action,p_limit:cap});
+  check(error);
+  if(data!==true)bad(429,'RATE_LIMITED');
+}
 async function profile(uid: string) {
   const {data,error} = await db.from('profiles').select('*').eq('user_id',uid).maybeSingle();
   check(error);
@@ -133,7 +138,7 @@ async function handle(req: Request) {
     return reply({service:{...data,owner_id:undefined},provider:p});
   }
   if (method === 'POST' && path === '/profiles') {
-    const u=await actor(req); const p=await parseBody(req);
+    const u=await actor(req); await limitWrite(u.id,'profile_create',10); const p=await parseBody(req);
     whitelist(p,['kind','display_name','city','category','about']);
     const kind=getString(p,'kind',1,20);
     if(!['cliente','prestador'].includes(kind)) bad(400,'INVALID_ROLE');
@@ -146,7 +151,7 @@ async function handle(req: Request) {
     const u=await actor(req); return reply(await profile(u.id));
   }
   if(method==='PATCH' && path==='/me') {
-    const u=await actor(req); await profile(u.id);const p=await parseBody(req);
+    const u=await actor(req); await profile(u.id);await limitWrite(u.id,'profile_update',30);const p=await parseBody(req);
     whitelist(p,['display_name','city','category','about']);
     if(!Object.keys(p).length)bad(400,'EMPTY_UPDATE');
     const changes:Payload={};
@@ -155,7 +160,7 @@ async function handle(req: Request) {
     const {data,error}=await db.from('profiles').update(changes).eq('user_id',u.id).select().single();check(error);return reply(data);
   }
   if(method==='POST' && path==='/services') {
-    const {user}=await role(req,'prestador');const p=await parseBody(req);
+    const {user}=await role(req,'prestador');await limitWrite(user.id,'service_create',30);const p=await parseBody(req);
     whitelist(p,['title','description','category','city','modality','price_type','price_cents']);
     const kind=getString(p,'price_type',3,20),modality=getString(p,'modality',2,20);
     if(!['fixo','inicial','orcamento'].includes(kind)||!['online','presencial'].includes(modality))bad(400,'INVALID_ENUM');
@@ -168,7 +173,7 @@ async function handle(req: Request) {
     const {data,error}=await db.from('services').select('*').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(50);check(error);return reply(data);
   }
   if(method==='PATCH'&&parts[0]==='services'&&parts[1]){
-    const {user}=await role(req,'prestador');const p=await parseBody(req);
+    const {user}=await role(req,'prestador');await limitWrite(user.id,'service_update',40);const p=await parseBody(req);
     whitelist(p,['title','description','category','city','modality','active']);
     const update:Payload={updated_at:new Date().toISOString()};
     for(const [k,min,max] of [['title',3,120],['description',10,2000],['category',2,80],['city',2,100],['modality',2,20]] as const)if(k in p)update[k]=getString(p,k,min,max);
@@ -177,7 +182,7 @@ async function handle(req: Request) {
     const {data,error}=await db.from('services').update(update).eq('id',id(parts[1])).eq('owner_id',user.id).select().maybeSingle();check(error);if(!data)bad(404,'NOT_FOUND');return reply(data);
   }
   if(method==='POST'&&path==='/requests'){
-    const {user}=await role(req,'cliente');const p=await parseBody(req);whitelist(p,['service_id','need','desired_date']);
+    const {user}=await role(req,'cliente');await limitWrite(user.id,'request_create',15);const p=await parseBody(req);whitelist(p,['service_id','need','desired_date']);
     const sid=id(String(p.service_id));const {data:s,error:e}=await db.from('services').select('*').eq('id',sid).eq('active',true).maybeSingle();check(e);if(!s)bad(404,'SERVICE_NOT_FOUND');
     if(s.owner_id===user.id)bad(403,'SELF_REQUEST');
     const date=p.desired_date==null?null:getString(p,'desired_date',10,10);
@@ -198,7 +203,7 @@ async function handle(req: Request) {
     return reply({request,proposals,contract,events});
   }
   if(parts[0]==='requests'&&parts[1]&&parts[2]==='actions'&&method==='POST') {
-    const user=await actor(req,true);const request=await ownedRequest(id(parts[1]),user.id);
+    const user=await actor(req,true);await limitWrite(user.id,'request_action',60);const request=await ownedRequest(id(parts[1]),user.id);
     const p=await parseBody(req);whitelist(p,['action','version','price_cents','duration_days','scope']);
     const action=getString(p,'action',3,40);
     const providerActions=['enviar_proposta','revisar_proposta','recusar_pedido','iniciar','finalizar'];
