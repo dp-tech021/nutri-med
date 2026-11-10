@@ -23,7 +23,7 @@ function Auth({mode}:{mode:'login'|'cadastro'|'recuperar'}) {
   async function submit(event:React.FormEvent) {
     event.preventDefault();setBusy(true);setError('');setOk('');
     try {
-      if(mode==='recuperar'){const {error:e}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/login'});if(e)throw e;setOk('Se a conta existir, você receberá instruções no e-mail.');}
+      if(mode==='recuperar'){const {error:e}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+'/atualizar-senha'});if(e)throw e;setOk('Se a conta existir, você receberá instruções no e-mail.');}
       else if(mode==='cadastro'){
         const {error:e}=await supabase.auth.signUp({email,password,options:{emailRedirectTo:location.origin+'/login'}});if(e)throw e;
         sessionStorage.setItem('registration',JSON.stringify({kind,display_name:name,city,category,about}));
@@ -42,6 +42,14 @@ function Auth({mode}:{mode:'login'|'cadastro'|'recuperar'}) {
       {mode!=='recuperar'&&<label className="field">Senha<input type="password" minLength={8} required autoComplete={mode==='cadastro'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)}/></label>}
       <button className="btn mt-3" disabled={busy}>{busy?'Processando...':'Continuar'}</button><Notice error={error} ok={ok}/>
     </form><p className="mt-4"><Link to="/recuperar">Esqueci a senha</Link></p></div></Layout>;
+}
+function ResetPassword(){
+  const {session}=useApp();const [password,setPassword]=useState(''),[error,setError]=useState(''),[ok,setOk]=useState(''),[busy,setBusy]=useState(false);
+  async function submit(e:React.FormEvent){e.preventDefault();setBusy(true);setError('');try{
+    const {error:err}=await supabase.auth.updateUser({password});
+    if(err)throw err;setOk('Senha atualizada. Agora você pode entrar com a nova senha.');
+  }catch(err){setError(errorMessage(err));}finally{setBusy(false);}}
+  return <Layout><section className="card max-w-lg mx-auto"><h1 className="text-2xl font-bold">Definir nova senha</h1>{!session?<p>Abra o link de recuperação recebido por e-mail. Se estiver expirado, solicite outro.</p>:<form onSubmit={e=>void submit(e)}><label className="field">Nova senha<input required type="password" autoComplete="new-password" minLength={8} value={password} onChange={e=>setPassword(e.target.value)}/></label><button disabled={busy} className="btn">Atualizar senha</button></form>}<Notice error={error} ok={ok}/></section></Layout>;
 }
 function Catalog(){
   const [items,setItems]=useState<Service[]>([]),[error,setError]=useState(''),[category,setCategory]=useState(''),[city,setCity]=useState('');
@@ -95,7 +103,7 @@ function App(){
   useEffect(()=>{void refresh();const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,s)=>{void refresh(s);});return()=>subscription.unsubscribe();},[]);
   if(!ready)return <p className="p-8">Iniciando sessão...</p>;
   return <Context.Provider value={{session,profile,refresh:async()=>refresh()}}><BrowserRouter><Routes>
-    <Route path="/" element={<Catalog/>}/><Route path="/login" element={<Auth mode="login"/>}/><Route path="/cadastro" element={<Auth mode="cadastro"/>}/><Route path="/recuperar" element={<Auth mode="recuperar"/>}/><Route path="/servico/:id" element={<Details/>}/>
+    <Route path="/" element={<Catalog/>}/><Route path="/login" element={<Auth mode="login"/>}/><Route path="/cadastro" element={<Auth mode="cadastro"/>}/><Route path="/recuperar" element={<Auth mode="recuperar"/>}/><Route path="/atualizar-senha" element={<ResetPassword/>}/><Route path="/servico/:id" element={<Details/>}/>
     <Route path="/dashboard" element={!session?<Navigate to="/login"/>:!profile?<SetupProfile/>:<Dashboard/>}/>
     <Route path="/novo-servico" element={!session?<Navigate to="/login"/>:profile?.kind!=='prestador'?<Navigate to="/dashboard"/>:<NewService/>}/>
     <Route path="/pedido/:id" element={!session?<Navigate to="/login"/>:<RequestDetails/>}/>
