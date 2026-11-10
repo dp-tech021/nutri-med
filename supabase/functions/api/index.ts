@@ -188,13 +188,29 @@ async function handle(req: Request) {
     const {data,error}=await db.from('services').select('*').eq('owner_id',user.id).order('created_at',{ascending:false}).limit(50);check(error);return reply(data);
   }
   if(method==='PATCH'&&parts[0]==='services'&&parts[1]){
-    const {user}=await role(req,'prestador');await limitWrite(user.id,'service_update',40);const p=await parseBody(req);
-    whitelist(p,['title','description','category','city','modality','active']);
+    const {user}=await role(req,'prestador');await limitWrite(user.id,'service_update',40);
+    const serviceId=id(parts[1]);
+    const {data:old,error:readError}=await db.from('services').select('*').eq('id',serviceId).eq('owner_id',user.id).maybeSingle();
+    check(readError);if(!old)bad(404,'NOT_FOUND');
+    const p=await parseBody(req);
+    whitelist(p,['title','description','category','city','modality','active','price_type','price_cents']);
+    if(!Object.keys(p).length)bad(400,'EMPTY_UPDATE');
     const update:Payload={updated_at:new Date().toISOString()};
-    for(const [k,min,max] of [['title',3,120],['description',10,2000],['category',2,80],['city',2,100],['modality',2,20]] as const)if(k in p)update[k]=getString(p,k,min,max);
+    for(const [k,min,max] of [['title',3,120],['description',10,2000],['category',2,80],['city',2,100],['modality',2,20]] as const)
+      if(k in p)update[k]=getString(p,k,min,max);
     if('modality'in update&&!['online','presencial'].includes(String(update.modality)))bad(400,'INVALID_MODALITY');
     if('active'in p){if(typeof p.active!=='boolean')bad(400,'INVALID_ACTIVE');update.active=p.active;}
-    const {data,error}=await db.from('services').update(update).eq('id',id(parts[1])).eq('owner_id',user.id).select().maybeSingle();check(error);if(!data)bad(404,'NOT_FOUND');return reply(data);
+    if('price_type'in p || 'price_cents'in p){
+      const kind='price_type'in p?getString(p,'price_type',3,20):old.price_type;
+      if(!['fixo','inicial','orcamento'].includes(kind))bad(400,'INVALID_PRICE_TYPE');
+      update.price_type=kind;
+      if(kind==='orcamento'){
+        if('price_cents'in p&&p.price_cents!==null)bad(400,'PRICE_NOT_ALLOWED');
+        update.price_cents=null;
+      }else update.price_cents='price_cents'in p?int(p.price_cents):old.price_cents;
+    }
+    const {data,error}=await db.from('services').update(update).eq('id',serviceId).eq('owner_id',user.id).select().single();
+    check(error);return reply(data);
   }
   if(method==='POST'&&path==='/requests'){
     const {user}=await role(req,'cliente');await limitWrite(user.id,'request_create',15);const p=await parseBody(req);whitelist(p,['service_id','need','desired_date']);
