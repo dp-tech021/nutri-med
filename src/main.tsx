@@ -4,6 +4,7 @@ import { BrowserRouter, Link, Navigate, Route, Routes, useNavigate, useParams } 
 import type { Session } from '@supabase/supabase-js';
 import {api,money,supabase,type Service,type RequestItem,type Proposal} from './api';
 import './index.css';
+import { PaymentDemo } from './PaymentDemo';
 
 type Profile={kind:'cliente'|'prestador';display_name:string;city:string;category:string;about:string};
 type AppContext={session:Session|null;profile:Profile|null;refresh:()=>Promise<void>};
@@ -14,7 +15,7 @@ function Layout({children}:{children:React.ReactNode}) {
   const {session,profile}=useApp();
   return <><header className="bg-white border-b border-emerald-100"><nav className="max-w-5xl mx-auto p-4 flex flex-wrap gap-4 items-center justify-between">
     <Link className="font-bold text-xl no-underline" to="/">Nutri-Med</Link><div className="flex gap-3 flex-wrap">
-    <Link to="/">Catálogo</Link>{session?<><Link to="/dashboard">Painel</Link><span>{profile?.display_name||'Conta'}</span><button className="btn btn-outline" onClick={()=>void supabase.auth.signOut()}>Sair</button></>:<><Link to="/login">Entrar</Link><Link to="/cadastro">Cadastrar</Link></>}</div></nav></header><main className="max-w-5xl mx-auto p-4 md:p-8">{children}</main><footer className="max-w-5xl mx-auto p-5 text-sm muted">Protótipo do MVP. Sem pagamentos na plataforma.</footer></>;
+    <Link to="/">Catálogo</Link>{session?<><Link to="/dashboard">Painel</Link><span>{profile?.display_name||'Conta'}</span><button className="btn btn-outline" onClick={()=>void supabase.auth.signOut()}>Sair</button></>:<><Link to="/login">Entrar</Link><Link to="/cadastro">Cadastrar</Link></>}</div></nav></header><main className="max-w-5xl mx-auto p-4 md:p-8">{children}</main><footer className="max-w-5xl mx-auto p-5 text-sm muted">Protótipo do MVP. Sem pagamentos reais. <Link to="/pagamento-demo">Testar tela de pagamento</Link>.</footer></>;
 }
 function Notice({error,ok}:{error?:string;ok?:string}) {return <>{error&&<p role="alert" className="error">{error}</p>}{ok&&<p role="status">{ok}</p>}</>}
 function Auth({mode}:{mode:'login'|'cadastro'|'recuperar'}) {
@@ -160,6 +161,7 @@ function RequestDetails(){
     {actions.some(a=>['enviar_proposta','revisar_proposta'].includes(a))&&<div className="card my-3"><label className="field">Valor proposto em R$<input type="number" min="0" step=".01" value={price} onChange={e=>setPrice(e.target.value)}/></label><label className="field">Prazo (dias)<input type="number" min="1" max="365" value={days} onChange={e=>setDays(e.target.value)}/></label><label className="field">Escopo da proposta<textarea minLength={10} maxLength={2000} value={scope} onChange={e=>setScope(e.target.value)}/></label></div>}
     <div className="flex flex-wrap gap-2 my-4">{actions.map(a=><button className="btn" disabled={busy} key={a} onClick={()=>{if(window.confirm(a==='aceitar'?'Você confirma a versão e as condições da proposta?':'Confirmar ação: '+a+'?'))void act(a);}}>{a.replaceAll('_',' ')}</button>)}</div><Notice error={error}/>
     <h2 className="font-semibold text-xl mt-4">Histórico</h2><ol className="list-decimal pl-5">{data.events.map((e,i)=><li key={i}>{e.action.replaceAll('_',' ')} — {e.to_status.replaceAll('_',' ')}</li>)}</ol>
+    {customer && data.contract && <p className="my-4"><Link className="btn" to={'/pagamento-demo/'+r.id}>Abrir simulação de pagamento</Link></p>}
     <p className="muted mt-4">Após o aceite, não é possível cancelar pelo fluxo comum. Conclusão exige confirmação do cliente.</p>
   </Layout>;
 }
@@ -180,6 +182,8 @@ function App(){
     <Route path="/dashboard" element={!session?<Navigate to="/login"/>:!profile?<SetupProfile/>:<Dashboard/>}/>
     <Route path="/novo-servico" element={!session?<Navigate to="/login"/>:profile?.kind!=='prestador'?<Navigate to="/dashboard"/>:<NewService/>}/><Route path="/editar-servico/:id" element={!session?<Navigate to="/login"/>:profile?.kind!=='prestador'?<Navigate to="/dashboard"/>:<EditService/>}/>
     <Route path="/pedido/:id" element={!session?<Navigate to="/login"/>:<RequestDetails/>}/>
+    <Route path="/pagamento-demo" element={<Layout><PaymentDemo session={session} userId={session?.user.id ?? null}/></Layout>}/>
+    <Route path="/pagamento-demo/:id" element={<Layout><PaymentDemo session={session} userId={session?.user.id ?? null}/></Layout>}/>
     <Route path="*" element={<Layout><h1>Página não encontrada</h1><Link to="/">Voltar ao início</Link></Layout>}/>
   </Routes></BrowserRouter></Context.Provider>;
 }
