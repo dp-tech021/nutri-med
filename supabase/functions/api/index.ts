@@ -151,7 +151,6 @@ async function handle(req: Request) {
     const date=p.desired_date==null?null:getString(p,'desired_date',10,10);
     if(date&&!/^\d{4}-\d{2}-\d{2}$/.test(date))bad(400,'INVALID_DATE');
     const {data,error}=await db.from('requests').insert({client_id:user.id,provider_id:s.owner_id,service_id:s.id,snapshot_title:s.title,snapshot_description:s.description,need:getString(p,'need',10,2000),desired_date:date}).select().single();check(error);
-    const {error:eventError}=await db.from('request_events').insert({request_id:data.id,actor_id:user.id,action:'criar',from_status:null,to_status:'aguardando_proposta'});check(eventError);
     return reply(data,201);
   }
   if(method==='GET'&&path==='/requests') {
