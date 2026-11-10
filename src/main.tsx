@@ -52,11 +52,43 @@ function ResetPassword(){
   return <Layout><section className="card max-w-lg mx-auto"><h1 className="text-2xl font-bold">Definir nova senha</h1>{!session?<p>Abra o link de recuperação recebido por e-mail. Se estiver expirado, solicite outro.</p>:<form onSubmit={e=>void submit(e)}><label className="field">Nova senha<input required type="password" autoComplete="new-password" minLength={8} value={password} onChange={e=>setPassword(e.target.value)}/></label><button disabled={busy} className="btn">Atualizar senha</button></form>}<Notice error={error} ok={ok}/></section></Layout>;
 }
 function Catalog(){
-  const [items,setItems]=useState<Service[]>([]),[error,setError]=useState(''),[category,setCategory]=useState(''),[city,setCity]=useState('');
-  useEffect(()=>{let live=true;const params=new URLSearchParams();if(category)params.set('category',category);if(city)params.set('city',city);void api<{items:Service[]}>('/catalog?'+params).then(r=>{if(live)setItems(r.items)}).catch(e=>{if(live)setError(errorMessage(e))});return()=>{live=false};},[category,city]);
+  const [items,setItems]=useState<Service[]>([]),[error,setError]=useState(''),[category,setCategory]=useState(''),[city,setCity]=useState(''),[term,setTerm]=useState(''),[searchIn,setSearchIn]=useState('service'),[modality,setModality]=useState(''),[cursor,setCursor]=useState<string|null>(null),[loading,setLoading]=useState(false);
+  const [filters,setFilters]=useState({category:'',city:'',term:'',searchIn:'service',modality:''});
+  useEffect(()=>{
+    let live=true;setLoading(true);setError('');
+    const params=new URLSearchParams({limit:'12'});
+    if(filters.category)params.set('category',filters.category);
+    if(filters.city)params.set('city',filters.city);
+    if(filters.modality)params.set('modality',filters.modality);
+    if(filters.term){params.set('q',filters.term);params.set('search_in',filters.searchIn);}
+    void api<{items:Service[];next_cursor:string|null}>('/catalog?'+params).then(r=>{if(live){setItems(r.items);setCursor(r.next_cursor);}}).catch(e=>{if(live)setError(errorMessage(e));}).finally(()=>{if(live)setLoading(false);});
+    return()=>{live=false};
+  },[filters]);
+  async function more(){
+    if(!cursor)return;setLoading(true);
+    const params=new URLSearchParams({limit:'12',cursor});
+    if(filters.category)params.set('category',filters.category);
+    if(filters.city)params.set('city',filters.city);
+    if(filters.modality)params.set('modality',filters.modality);
+    if(filters.term){params.set('q',filters.term);params.set('search_in',filters.searchIn);}
+    try{const r=await api<{items:Service[];next_cursor:string|null}>('/catalog?'+params);setItems(old=>[...old,...r.items]);setCursor(r.next_cursor);}
+    catch(e){setError(errorMessage(e));}finally{setLoading(false);}
+  }
+  function submit(e:React.FormEvent){e.preventDefault();setFilters({category:category.trim(),city:city.trim(),term:term.trim(),searchIn,modality});}
   return <Layout><h1 className="text-3xl font-bold">Encontre serviços</h1><p className="muted my-3">Explore prestadores e solicite orçamentos sem pagar pela plataforma.</p>
-    <div className="grid md:grid-cols-2 gap-3 mb-5"><label className="field">Categoria (exata)<input value={category} onChange={e=>setCategory(e.target.value)}/></label><label className="field">Cidade (exata)<input value={city} onChange={e=>setCity(e.target.value)}/></label></div>
-    <Notice error={error}/><div className="grid md:grid-cols-2 gap-4">{items.map(s=><article className="card" key={s.id}><h2 className="text-xl font-semibold">{s.title}</h2><p>{s.category} • {s.city} • {s.modality}</p><p>{s.description.slice(0,180)}</p><p className="font-semibold my-2">{money(s.price_cents)}</p><Link to={'/servico/'+s.id}>Ver detalhes</Link></article>)}</div>{!items.length&&!error&&<p className="my-5">Nenhum serviço ativo encontrado.</p>}</Layout>;
+    <form className="card grid md:grid-cols-2 gap-3 mb-5" onSubmit={submit}>
+      <label className="field">Busca por prefixo<input value={term} maxLength={60} onChange={e=>setTerm(e.target.value)} placeholder="Ex.: limpeza"/></label>
+      <label className="field">Pesquisar em<select value={searchIn} onChange={e=>setSearchIn(e.target.value)}><option value="service">Serviço</option><option value="provider">Prestador</option></select></label>
+      <label className="field">Categoria<input value={category} onChange={e=>setCategory(e.target.value)} /></label>
+      <label className="field">Cidade<input value={city} onChange={e=>setCity(e.target.value)}/></label>
+      <label className="field">Modalidade<select value={modality} onChange={e=>setModality(e.target.value)}><option value="">Todas</option><option value="online">Online</option><option value="presencial">Presencial</option></select></label>
+      <div className="self-end"><button className="btn" disabled={loading}>Aplicar filtros</button></div>
+    </form>
+    <Notice error={error}/>{loading&&<p role="status">Carregando serviços...</p>}
+    <div className="grid md:grid-cols-2 gap-4">{items.map(s=><article className="card" key={s.id}><h2 className="text-xl font-semibold">{s.title}</h2><p>{s.provider_name} • {s.category} • {s.city} • {s.modality}</p><p>{s.description.slice(0,180)}</p><p className="font-semibold my-2">{money(s.price_cents)}</p><Link to={'/servico/'+s.id}>Ver detalhes</Link></article>)}</div>
+    {!items.length&&!error&&!loading&&<p className="my-5">Nenhum serviço ativo encontrado.</p>}
+    {cursor&&<button className="btn btn-outline my-6" disabled={loading} onClick={()=>void more()}>Carregar mais</button>}
+  </Layout>;
 }
 function Details(){
   const {id}=useParams(),{session,profile}=useApp();const navigate=useNavigate();const [item,setItem]=useState<{service:Service;provider:{display_name:string;about:string}}|null>(null),[need,setNeed]=useState(''),[date,setDate]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
