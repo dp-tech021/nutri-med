@@ -1,6 +1,6 @@
 # Nutri-Med — Backlog e roadmap de desenvolvimento
 
-> Registro criado em 2026-11-10. Esta branch contém **apenas planejamento e templates**. As **37 Issues** estão criadas e abertas; nenhuma delas foi concluída automaticamente.
+> Registro criado em 2026-11-10. Este documento organiza planejamento e acompanhamento. Foram cadastradas **38 Issues**; a situação de cada uma deve ser conferida no GitHub. Nenhuma tarefa deve ser considerada concluída somente por ter sido cadastrada.
 
 ## Visão e limites do projeto
 Plataforma web em que **clientes** encontram prestadores, solicitam orçamento, recebem propostas versionadas, aceitam condições e acompanham a execução e conclusão. O MVP **não processa pagamentos**. O posicionamento entre marketplace genérico e saúde/nutrição depende da decisão de [NM-01](https://github.com/dp-tech021/nutri-med/issues/6). Não presumir tratamento de dados de saúde sem avaliação de risco. Consultar [perguntas e decisões pendentes](questoes-em-aberto.md): nicho, modelo comercial, categorias, profissionais, suporte, métricas e limites operacionais.
@@ -68,9 +68,10 @@ Plataforma web em que **clientes** encontram prestadores, solicitam orçamento, 
 | [NM-35](https://github.com/dp-tech021/nutri-med/issues/41) | F1-F3 | P0 | Produto | Id-UserDanilo + o-tedd | Termos, suporte, disputas e responsabilidade |
 | [NM-36](https://github.com/dp-tech021/nutri-med/issues/42) | F1 | P1 | Produto | Id-UserDanilo + o-tedd | Métricas de sucesso e critérios de piloto |
 | [NM-37](https://github.com/dp-tech021/nutri-med/issues/43) | F1-F2 | P1 | Produto | Id-UserDanilo + o-tedd | Regiões, preços e limites operacionais |
+| [NM-38](https://github.com/dp-tech021/nutri-med/issues/44) | F1 | P1 | Produto/Processo | Id-UserDanilo + o-tedd | Definir licença e regras de uso do código |
 
-## PRs pré-existentes e cuidados com integração
-- [PR #38](https://github.com/dp-tech021/nutri-med/pull/38): backlog, regras de trabalho, README, decisões pendentes e templates; revisão antes de merge.
+## Histórico de PRs e cuidados com integração
+- [PR #38](https://github.com/dp-tech021/nutri-med/pull/38): histórico da organização do README, backlog e templates.
 - [PR #2](https://github.com/dp-tech021/nutri-med/pull/2): diretrizes e escopo do MVP; revisão antes do merge.
 - [PR #3](https://github.com/dp-tech021/nutri-med/pull/3): arquitetura Supabase e custo zero; reconciliar com a base.
 - [PR #4](https://github.com/dp-tech021/nutri-med/pull/4): implementação de frontend/backend em branch **não integrada**. Existe CI frontend, mas testes de banco e fluxo completo seguem pendentes.
@@ -78,7 +79,7 @@ Plataforma web em que **clientes** encontram prestadores, solicitam orçamento, 
 - [PR #1](https://github.com/dp-tech021/nutri-med/pull/1): teste de conexão encerrado sem merge.
 
 ## Questões e decisões ainda abertas
-As novas Issues **NM-33–NM-37** registram dúvidas de negócio que não devem ser respondidas por suposição. Consulte [docs/questoes-em-aberto.md](questoes-em-aberto.md) para as perguntas e responsáveis, e responda nas Issues antes de alterar regras de produto.
+As Issues **NM-33–NM-38** registram decisões de negócio e licenciamento que não devem ser respondidas por suposição. Consulte [docs/questoes-em-aberto.md](questoes-em-aberto.md) para as perguntas e responsáveis, e responda nas Issues antes de alterar regras de produto.
 
 ## Consultas rápidas
 - [Todas as Issues](https://github.com/dp-tech021/nutri-med/issues)
