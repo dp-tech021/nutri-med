@@ -61,7 +61,7 @@ A arquitetura de referência inicial sugeria Firebase. O [PR #3](https://github.
 | [PR #3](https://github.com/dp-tech021/nutri-med/pull/3) | Arquitetura, decisão tecnológica e custos — pendente |
 | [PR #4](https://github.com/dp-tech021/nutri-med/pull/4) | MVP codificado em branch; **QA integrado de Supabase/SQL não foi comprovado** |
 | [PR #5](https://github.com/dp-tech021/nutri-med/pull/5) | Pagamento **somente simulado**; depende do PR #4 |
-| [PR #38](https://github.com/dp-tech021/nutri-med/pull/38) | Backlog, responsáveis, templates e este README — em revisão |
+| [PR #38](https://github.com/dp-tech021/nutri-med/pull/38) | Histórico da organização inicial: backlog, responsáveis, templates e README |
 
 **O que está codificado no PR #4:** catálogo, login/cadastro, telas de cliente/prestador, serviços, pedidos, propostas, aceite, conclusão, API, migrations e testes. **O que falta validar:** migrations em banco real/local, isolamento de contas, filtros/paginação, concorrência de aceite, e-mail/SMTP, acessibilidade, carga e uploads. A CI não substitui testes integrados; o teste integrado pode ser ignorado sem chaves **locais** de teste. Há pendência de `package-lock.json` na branch de desenvolvimento. Não declarar pronto para produção.
 
@@ -142,10 +142,14 @@ O teste integrado adicional está definido em `npm run test:integration`, **some
 - Proteger senhas/tokens/chaves e revisar logs, erros e dependências.
 - **Pronto** significa funcionalidade testada, documentada, revisada, integrada e com critérios de aceite atendidos — não apenas código gerado por IA.
 
-### Links de especificação (em branches de revisão)
+### Links de especificação (em branches de desenvolvimento/revisão)
 - [Escopo original resumido (PR #2)](https://github.com/dp-tech021/nutri-med/blob/chore/preparacao-inicial-mvp/docs/escopo-mvp.md)
 - [Arquitetura detalhada (PR #3)](https://github.com/dp-tech021/nutri-med/blob/docs/arquitetura-mvp-custo-zero/docs/arquitetura-mvp.md)
 - [QA pendente (PR #4)](https://github.com/dp-tech021/nutri-med/blob/feat/mvp-plataforma-servicos/docs/qa-pendente.md)
 - [Limites do pagamento simulado (PR #5)](https://github.com/dp-tech021/nutri-med/blob/feat/tela-pagamento-simulado/docs/pagamento-simulado.md)
+
+## 9. Licença
+
+**Licença do código ainda não definida**. Um repositório público no GitHub não concede, por si só, permissão geral para copiar, redistribuir ou utilizar o código fora das condições legais aplicáveis. A dupla deve decidir e registrar uma licença antes de distribuir o projeto. Ver [NM-38](https://github.com/dp-tech021/nutri-med/issues/44) quando cadastrada.
 
 **Não coletar dados sensíveis de saúde, lançar cobranças ou publicar produção antes das decisões, testes e autorizações necessários.**
