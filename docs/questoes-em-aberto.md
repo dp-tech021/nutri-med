@@ -57,3 +57,11 @@
 
 ## Como responder
 Registrar resposta e evidência na **Issue indicada**; se houver decisão técnica/arquitetural relevante, criar ou atualizar ADR e relacionar seu PR. Alterar requisitos e interfaces somente após a decisão ser aceita. Não inventar respostas nem marcar tarefas concluídas por ter apenas gerado código. O projeto ainda depende da validação integrada para ser considerado funcional.
+
+## 8. Licença e direitos de uso — [NM-38](https://github.com/dp-tech021/nutri-med/issues/44)
+- [ ] O projeto será open source, privado ou apenas publicamente visível como portfólio?
+- [ ] Quem detém direitos sobre o código, documentação, marca e imagens?
+- [ ] Qual licença expressa foi aprovada pelos dois colaboradores?
+- [ ] Dependências e materiais de terceiros permitem a distribuição pretendida?
+
+**Até uma decisão formal, a licença permanece não definida. Um repositório público não significa automaticamente código livre.**
