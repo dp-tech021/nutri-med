@@ -81,7 +81,7 @@ Prefira verbos explícitos: “Salvar alterações”, “Desativar anúncio”,
 
 Em desenvolvimento, abra `/dev/design-system`. A rota é criada apenas quando `import.meta.env.DEV` é verdadeiro e não existe no build de produção. Todos os exemplos usam dados sintéticos.
 
-Com o servidor local na porta 4173, execute `npm run screenshots:design-system` para atualizar as capturas de 375 px e 1440 px em `docs/screenshots/design-system/`. Se o Chromium estiver instalado fora do caminho padrão do Playwright, informe `CHROMIUM_EXECUTABLE_PATH`.
+Inicie `npm run dev` (porta padrão 5173) e execute `npm run screenshots:design-system` em outro terminal para atualizar as capturas de 375 px e 1440 px em `docs/screenshots/design-system/`. Se o Chromium estiver instalado fora do caminho padrão do Playwright, informe `CHROMIUM_EXECUTABLE_PATH`.
 
 Para alterar o sistema:
 
