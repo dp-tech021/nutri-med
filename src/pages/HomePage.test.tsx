@@ -16,7 +16,7 @@ describe('página inicial', () => {
     expect(screen.getByRole('heading', { name: 'Solicite um orçamento' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Analise a proposta' })).toBeVisible();
     expect(screen.getAllByRole('link', { name: /Explorar serviços/i })[0]).toHaveAttribute('href', '/servicos');
-    expect(screen.getByRole('link', { name: 'Criar conta de prestador' })).toHaveAttribute('href', '/cadastro');
+    expect(screen.getByRole('link', { name: 'Criar conta de prestador' })).toHaveAttribute('href', '/cadastro?tipo=prestador');
     expect(screen.getByText(/não realiza pagamentos/i)).toBeVisible();
   });
 
