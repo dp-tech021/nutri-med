@@ -97,7 +97,7 @@ export function HomePage() {
           <p className="eyebrow">Para prestadores</p>
           <h3>Apresente seu trabalho e responda pedidos</h3>
           <p>Crie uma conta de prestador, publique serviços e envie propostas com escopo, prazo e valor.</p>
-          <LinkButton to="/cadastro" variant="secondary">Criar conta de prestador</LinkButton>
+          <LinkButton to="/cadastro?tipo=prestador" variant="secondary">Criar conta de prestador</LinkButton>
         </Card>
       </div>
     </section>
