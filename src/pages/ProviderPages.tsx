@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ApiError, api, money, type RequestItem, type Service } from '../api';
 import { useApp } from '../app/AppContext';
@@ -33,24 +33,33 @@ function useProviderOverview() {
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const requestVersion = useRef(0);
   const load = useCallback(async () => {
+    const version = ++requestVersion.current;
     if (!session) return;
     setLoading(true);
     setError('');
+    setServices([]);
+    setRequests([]);
     try {
       const [nextServices, nextRequests] = await Promise.all([
         api<Service[]>('/my/services', 'GET', undefined, session),
         api<RequestItem[]>('/requests', 'GET', undefined, session),
       ]);
-      setServices(nextServices);
-      setRequests(nextRequests);
+      if (version === requestVersion.current) {
+        setServices(nextServices);
+        setRequests(nextRequests);
+      }
     } catch (requestError) {
-      setError(privateResourceError(requestError, 'Não foi possível carregar o painel do prestador.'));
+      if (version === requestVersion.current) setError(privateResourceError(requestError, 'Não foi possível carregar o painel do prestador.'));
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   }, [session]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    return () => { requestVersion.current += 1; };
+  }, [load]);
   return { services, requests, loading, error, reload: load };
 }
 
@@ -79,20 +88,27 @@ export function MyServicesPage() {
   const [error, setError] = useState('');
   const [pendingService, setPendingService] = useState<Service | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const requestVersion = useRef(0);
 
   const load = useCallback(async () => {
+    const version = ++requestVersion.current;
     if (!session) return;
     setLoading(true);
     setError('');
+    setServices([]);
     try {
-      setServices(await api<Service[]>('/my/services', 'GET', undefined, session));
+      const nextServices = await api<Service[]>('/my/services', 'GET', undefined, session);
+      if (version === requestVersion.current) setServices(nextServices);
     } catch (requestError) {
-      setError(privateResourceError(requestError, 'Não foi possível carregar seus serviços.'));
+      if (version === requestVersion.current) setError(privateResourceError(requestError, 'Não foi possível carregar seus serviços.'));
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   }, [session]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    return () => { requestVersion.current += 1; };
+  }, [load]);
 
   async function setActive(service: Service, active: boolean) {
     if (busyId) return;
@@ -114,7 +130,7 @@ export function MyServicesPage() {
     <div className="provider-page-heading"><div><p className="eyebrow">Anúncios</p><h1>Meus serviços</h1></div><LinkButton to="/novo-servico">Novo serviço</LinkButton></div>
     <ProviderNav />
     {error && <ErrorState description={error} onRetry={() => void load()} />}
-    {loading ? <LoadingState label="Carregando serviços..." /> : !services.length ? <EmptyState title="Nenhum serviço publicado" description="Crie seu primeiro anúncio para que ele possa aparecer no catálogo após a validação da API." action={<LinkButton to="/novo-servico">Criar serviço</LinkButton>} /> : <div className="provider-list">
+    {loading ? <LoadingState label="Carregando serviços..." /> : error ? null : !services.length ? <EmptyState title="Nenhum serviço publicado" description="Crie seu primeiro anúncio para que ele possa aparecer no catálogo após a validação da API." action={<LinkButton to="/novo-servico">Criar serviço</LinkButton>} /> : <div className="provider-list">
       {services.map((service) => <Card key={service.id} as="article" className="provider-service-card">
         <div className="provider-service-card__header"><div><h2>{service.title}</h2><p>{service.city} · {service.modality === 'online' ? 'Online' : 'Presencial'}</p></div><Badge variant={service.active === false ? 'neutral' : 'success'}>{service.active === false ? 'Inativo' : 'Ativo'}</Badge></div>
         <p>{service.price_type === 'inicial' ? 'A partir de ' : ''}{money(service.price_cents)}</p>
@@ -144,19 +160,26 @@ function ProviderRequestsPage({ view }: { view: 'received' | 'proposals' }) {
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const requestVersion = useRef(0);
   const load = useCallback(async () => {
+    const version = ++requestVersion.current;
     if (!session) return;
     setLoading(true);
     setError('');
+    setRequests([]);
     try {
-      setRequests(await api<RequestItem[]>('/requests', 'GET', undefined, session));
+      const nextRequests = await api<RequestItem[]>('/requests', 'GET', undefined, session);
+      if (version === requestVersion.current) setRequests(nextRequests);
     } catch (requestError) {
-      setError(privateResourceError(requestError, 'Não foi possível carregar as solicitações.'));
+      if (version === requestVersion.current) setError(privateResourceError(requestError, 'Não foi possível carregar as solicitações.'));
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoading(false);
     }
   }, [session]);
-  useEffect(() => { void load(); }, [load]);
+  useEffect(() => {
+    void load();
+    return () => { requestVersion.current += 1; };
+  }, [load]);
 
   const items = useMemo(() => view === 'received'
     ? requests.filter((request) => request.status === 'aguardando_proposta' && request.current_version === 0)
@@ -169,7 +192,7 @@ function ProviderRequestsPage({ view }: { view: 'received' | 'proposals' }) {
     <div className="provider-page-heading"><div><p className="eyebrow">Atendimento</p><h1>{title}</h1></div></div>
     <ProviderNav />
     {error && <ErrorState description={error} onRetry={() => void load()} />}
-    {loading ? <LoadingState label={`Carregando ${received ? 'solicitações' : 'propostas'}...`} /> : !items.length ? <EmptyState
+    {loading ? <LoadingState label={`Carregando ${received ? 'solicitações' : 'propostas'}...`} /> : error ? null : !items.length ? <EmptyState
       title={received ? 'Nenhuma solicitação aguardando resposta' : 'Nenhuma proposta enviada'}
       description={received ? 'Novos pedidos destinados à sua conta aparecerão aqui.' : 'Após responder a uma solicitação, acompanhe aqui as versões e o andamento.'}
     /> : <div className="provider-list">
