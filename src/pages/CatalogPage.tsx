@@ -1,13 +1,17 @@
-import { useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { api, money, type Service } from '../api';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { api, type Service } from '../api';
 import { Layout } from '../components/Layout';
-import { Button, Card, EmptyState, ErrorState, LoadingState } from '../components/ui';
+import { ServiceCard } from '../components/ServiceCard';
+import { Alert, Button, EmptyState, ErrorState, Field, Input, LoadingState, Select } from '../components/ui';
 import { errorMessage } from '../utils/errors';
 
-type Filters = { category: string; city: string; term: string; searchIn: string; modality: string };
+export type CatalogFilters = { category: string; city: string; term: string; searchIn: 'service' | 'provider'; modality: string };
+type CatalogResponse = { items: Service[]; next_cursor: string | null };
+type Category = { slug: string; label: string };
 
-function catalogParams(filters: Filters, cursor?: string) {
+export const emptyFilters: CatalogFilters = { category: '', city: '', term: '', searchIn: 'service', modality: '' };
+
+export function catalogParams(filters: CatalogFilters, cursor?: string) {
   const params = new URLSearchParams({ limit: '12' });
   if (cursor) params.set('cursor', cursor);
   if (filters.category) params.set('category', filters.category);
@@ -20,85 +24,139 @@ function catalogParams(filters: Filters, cursor?: string) {
   return params;
 }
 
+export function mergeUniqueServices(current: Service[], incoming: Service[]) {
+  const seen = new Set(current.map((service) => service.id));
+  return [...current, ...incoming.filter((service) => !seen.has(service.id))];
+}
+
 export function CatalogPage() {
-  const [categories, setCategories] = useState<{ slug: string; label: string }[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoryError, setCategoryError] = useState('');
   const [items, setItems] = useState<Service[]>([]);
   const [error, setError] = useState('');
-  const [category, setCategory] = useState('');
-  const [city, setCity] = useState('');
-  const [term, setTerm] = useState('');
-  const [searchIn, setSearchIn] = useState('service');
-  const [modality, setModality] = useState('');
+  const [draft, setDraft] = useState<CatalogFilters>(emptyFilters);
+  const [filters, setFilters] = useState<CatalogFilters>(emptyFilters);
   const [cursor, setCursor] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState<Filters>({ category: '', city: '', term: '', searchIn: 'service', modality: '' });
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [requestKey, setRequestKey] = useState(0);
+  const requestVersion = useRef(0);
 
   useEffect(() => {
-    void api<{ slug: string; label: string }[]>('/categories').then(setCategories).catch(() => undefined);
+    const controller = new AbortController();
+    setCategoryError('');
+    void api<Category[]>('/categories', 'GET', undefined, undefined, controller.signal)
+      .then(setCategories)
+      .catch((requestError) => {
+        if (!controller.signal.aborted) setCategoryError(errorMessage(requestError));
+      });
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
-    let live = true;
+    const controller = new AbortController();
+    const version = ++requestVersion.current;
     setLoading(true);
+    setLoadingMore(false);
     setError('');
-    void api<{ items: Service[]; next_cursor: string | null }>('/catalog?' + catalogParams(filters))
+    setItems([]);
+    setCursor(null);
+    void api<CatalogResponse>(`/catalog?${catalogParams(filters)}`, 'GET', undefined, undefined, controller.signal)
       .then((response) => {
-        if (live) {
-          setItems(response.items);
+        if (version === requestVersion.current) {
+          setItems(mergeUniqueServices([], response.items));
           setCursor(response.next_cursor);
         }
       })
       .catch((requestError) => {
-        if (live) setError(errorMessage(requestError));
+        if (!controller.signal.aborted && version === requestVersion.current) setError(errorMessage(requestError));
       })
       .finally(() => {
-        if (live) setLoading(false);
+        if (version === requestVersion.current) setLoading(false);
       });
-    return () => { live = false; };
-  }, [filters]);
+    return () => controller.abort();
+  }, [filters, requestKey]);
 
   async function more() {
-    if (!cursor) return;
-    setLoading(true);
+    if (!cursor || loadingMore) return;
+    const version = requestVersion.current;
+    const currentCursor = cursor;
+    setLoadingMore(true);
+    setError('');
     try {
-      const response = await api<{ items: Service[]; next_cursor: string | null }>('/catalog?' + catalogParams(filters, cursor));
-      setItems((current) => [...current, ...response.items]);
-      setCursor(response.next_cursor);
+      const response = await api<CatalogResponse>(`/catalog?${catalogParams(filters, currentCursor)}`);
+      if (version === requestVersion.current) {
+        setItems((current) => mergeUniqueServices(current, response.items));
+        setCursor(response.next_cursor);
+      }
     } catch (requestError) {
-      setError(errorMessage(requestError));
+      if (version === requestVersion.current) setError(errorMessage(requestError));
     } finally {
-      setLoading(false);
+      if (version === requestVersion.current) setLoadingMore(false);
     }
   }
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    setFilters({ category: category.trim(), city: city.trim(), term: term.trim(), searchIn, modality });
+    setFilters({ ...draft, city: draft.city.trim(), term: draft.term.trim() });
+  }
+
+  function clearFilters() {
+    setDraft(emptyFilters);
+    setFilters(emptyFilters);
+    setRequestKey((current) => current + 1);
   }
 
   return <Layout>
-    <h1 className="text-3xl font-bold">Encontre serviços</h1>
-    <p className="muted my-3">Explore prestadores e solicite orçamentos sem pagar pela plataforma.</p>
-    <form className="card grid md:grid-cols-2 gap-3 mb-5" onSubmit={submit}>
-      <label className="field">Busca por prefixo<input value={term} maxLength={60} onChange={(event) => setTerm(event.target.value)} placeholder="Ex.: limpeza" /></label>
-      <label className="field">Pesquisar em<select value={searchIn} onChange={(event) => setSearchIn(event.target.value)}><option value="service">Serviço</option><option value="provider">Prestador</option></select></label>
-      <label className="field">Categoria<select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">Todas</option>{categories.map((item) => <option key={item.slug} value={item.slug}>{item.label}</option>)}</select></label>
-      <label className="field">Cidade<input value={city} onChange={(event) => setCity(event.target.value)} /></label>
-      <label className="field">Modalidade<select value={modality} onChange={(event) => setModality(event.target.value)}><option value="">Todas</option><option value="online">Online</option><option value="presencial">Presencial</option></select></label>
-      <div className="self-end"><Button disabled={loading}>Aplicar filtros</Button></div>
+    <header className="catalog-heading">
+      <p className="eyebrow">Catálogo público</p>
+      <h1>Encontre serviços</h1>
+      <p>Busque pelo início do nome de um serviço ou prestador e solicite um orçamento antes de decidir.</p>
+    </header>
+
+    <form className="catalog-filters" onSubmit={submit} aria-label="Filtros do catálogo">
+      <Field label="Buscar" htmlFor="catalog-term" hint="A busca encontra nomes que começam com o texto digitado.">
+        <Input id="catalog-term" value={draft.term} minLength={2} maxLength={60} onChange={(event) => setDraft({ ...draft, term: event.target.value })} placeholder="Ex.: limp" />
+      </Field>
+      <Field label="Buscar por" htmlFor="catalog-search-in">
+        <Select id="catalog-search-in" value={draft.searchIn} onChange={(event) => setDraft({ ...draft, searchIn: event.target.value as CatalogFilters['searchIn'] })}>
+          <option value="service">Serviço</option>
+          <option value="provider">Prestador</option>
+        </Select>
+      </Field>
+      <Field label="Categoria" htmlFor="catalog-category">
+        <Select id="catalog-category" value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}>
+          <option value="">Todas as categorias</option>
+          {categories.map((item) => <option key={item.slug} value={item.slug}>{item.label}</option>)}
+        </Select>
+      </Field>
+      <Field label="Cidade" htmlFor="catalog-city">
+        <Input id="catalog-city" value={draft.city} maxLength={100} onChange={(event) => setDraft({ ...draft, city: event.target.value })} placeholder="Ex.: São Paulo" />
+      </Field>
+      <Field label="Modalidade" htmlFor="catalog-modality">
+        <Select id="catalog-modality" value={draft.modality} onChange={(event) => setDraft({ ...draft, modality: event.target.value })}>
+          <option value="">Todas as modalidades</option>
+          <option value="online">Online</option>
+          <option value="presencial">Presencial</option>
+        </Select>
+      </Field>
+      <div className="catalog-filter-actions">
+        <Button type="submit" loading={loading}>Buscar</Button>
+        <Button type="button" variant="secondary" disabled={loading} onClick={clearFilters}>Limpar filtros</Button>
+      </div>
     </form>
-    {error && <ErrorState description={error} onRetry={() => setFilters({ ...filters })} />}
-    {loading && <LoadingState label="Carregando serviços..." />}
-    <div className="grid md:grid-cols-2 gap-4">
-      {items.map((service) => <Card as="article" key={service.id}>
-        <h2 className="text-xl font-semibold">{service.title}</h2>
-        <p>{service.provider_name} • {service.category} • {service.city} • {service.modality}</p>
-        <p>{service.description.slice(0, 180)}</p>
-        <p className="font-semibold my-2">{money(service.price_cents)}</p>
-        <Link to={'/servico/' + service.id}>Ver detalhes</Link>
-      </Card>)}
+
+    {categoryError && <Alert variant="warning" title="Categorias indisponíveis">Você ainda pode buscar por nome, cidade e modalidade.</Alert>}
+    <div className="catalog-results-heading" aria-live="polite">
+      <h2>Serviços disponíveis</h2>
+      {!loading && !error && <span>{items.length} {items.length === 1 ? 'resultado exibido' : 'resultados exibidos'}</span>}
     </div>
-    {!items.length && !error && !loading && <EmptyState title="Nenhum serviço ativo encontrado" description="Tente remover filtros ou buscar outro termo." />}
-    {cursor && <Button variant="secondary" className="my-6" disabled={loading} onClick={() => void more()}>Carregar mais serviços</Button>}
+    {error && <ErrorState title="Não foi possível carregar o catálogo" description="Verifique sua conexão e tente novamente." onRetry={() => setRequestKey((current) => current + 1)} />}
+    {loading && <LoadingState label="Carregando serviços..." />}
+    {!loading && !error && items.length > 0 && <div className="services-grid">
+      {items.map((service) => <ServiceCard key={service.id} service={service} />)}
+    </div>}
+    {!loading && !error && items.length === 0 && <EmptyState title="Nenhum serviço encontrado" description="Tente limpar os filtros ou buscar pelo início de outro nome." action={<Button variant="secondary" onClick={clearFilters}>Limpar filtros</Button>} />}
+    {cursor && !loading && <div className="catalog-pagination"><Button variant="secondary" loading={loadingMore} onClick={() => void more()}>Carregar mais serviços</Button></div>}
   </Layout>;
 }
