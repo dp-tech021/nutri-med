@@ -2,7 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { useApp } from '../app/AppContext';
 import { Layout } from '../components/Layout';
-import { AuthPage, ResetPasswordPage } from '../pages/AuthPages';
+import { AuthPage, ResetPasswordPage, safeInternalPath } from '../pages/AuthPages';
 import { CatalogPage } from '../pages/CatalogPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { HomePage } from '../pages/HomePage';
@@ -34,7 +34,9 @@ export function AppRoutes() {
   return <Routes>
     <Route path="/" element={<HomePage />} />
     <Route path="/servicos" element={<CatalogPage />} />
-    <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <AuthPage mode="login" />} />
+    <Route path="/login" element={session
+      ? <Navigate to={safeInternalPath((location.state as { from?: unknown } | null)?.from)} replace />
+      : <AuthPage mode="login" />} />
     <Route path="/cadastro" element={session ? <Navigate to="/dashboard" replace /> : <AuthPage mode="cadastro" />} />
     <Route path="/recuperar" element={<AuthPage mode="recuperar" />} />
     <Route path="/atualizar-senha" element={<ResetPasswordPage />} />
