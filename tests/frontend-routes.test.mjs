@@ -8,6 +8,7 @@ const entry = readFileSync(new URL('../src/main.tsx', import.meta.url), 'utf8');
 test('refatoração preserva as rotas públicas e privadas do MVP', () => {
   for (const path of [
     '/',
+    '/servicos',
     '/login',
     '/cadastro',
     '/recuperar',
