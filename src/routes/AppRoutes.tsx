@@ -5,6 +5,7 @@ import { Layout } from '../components/Layout';
 import { AuthPage, ResetPasswordPage } from '../pages/AuthPages';
 import { CatalogPage } from '../pages/CatalogPage';
 import { DashboardPage } from '../pages/DashboardPage';
+import { HomePage } from '../pages/HomePage';
 import { ProfileSetupPage } from '../pages/ProfileSetupPage';
 import { PublicProviderPage } from '../pages/PublicProviderPage';
 import { RequestDetailsPage } from '../pages/RequestDetailsPage';
@@ -20,7 +21,8 @@ export function AppRoutes() {
   const { session, profile } = useApp();
 
   return <Routes>
-    <Route path="/" element={<CatalogPage />} />
+    <Route path="/" element={<HomePage />} />
+    <Route path="/servicos" element={<CatalogPage />} />
     <Route path="/login" element={<AuthPage mode="login" />} />
     <Route path="/cadastro" element={<AuthPage mode="cadastro" />} />
     <Route path="/recuperar" element={<AuthPage mode="recuperar" />} />
