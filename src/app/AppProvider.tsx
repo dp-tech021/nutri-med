@@ -1,45 +1,85 @@
-import { useCallback, useEffect, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { api, supabase } from '../api';
+import { api, ApiError, supabase } from '../api';
 import type { Profile } from '../types';
 import { AppContext } from './AppContext';
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileError, setProfileError] = useState('');
+  const [authNotice, setAuthNotice] = useState('');
   const [ready, setReady] = useState(false);
+  const hadSession = useRef(false);
+  const requestVersion = useRef(0);
 
-  const refreshSession = useCallback(async (nextSession?: Session | null) => {
-    const current = nextSession === undefined
-      ? (await supabase.auth.getSession()).data.session
-      : nextSession;
+  const refreshSession = useCallback(async (nextSession?: Session | null, event?: string) => {
+    const version = ++requestVersion.current;
+    let current = nextSession;
+    if (nextSession === undefined) {
+      const { data, error } = await supabase.auth.getSession();
+      if (version !== requestVersion.current) return;
+      if (error) {
+        hadSession.current = false;
+        setProfileError('');
+        setAuthNotice('Não foi possível verificar sua sessão. Entre novamente para continuar.');
+        setSession(null);
+        setProfile(null);
+        setReady(true);
+        return;
+      }
+      current = data.session;
+    }
+
+    const previousSession = hadSession.current;
+    hadSession.current = Boolean(current);
+    if (event === 'SIGNED_OUT' && previousSession) {
+      setAuthNotice('Sua sessão terminou. Entre novamente para continuar.');
+    } else if (event === 'SIGNED_IN') {
+      setAuthNotice('');
+    }
 
     setSession(current || null);
+    setProfile(null);
     if (current) {
       try {
-        setProfile(await api<Profile>('/me', 'GET', undefined, current));
-      } catch {
+        const nextProfile = await api<Profile>('/me', 'GET', undefined, current);
+        if (version !== requestVersion.current) return;
+        setProfile(nextProfile);
+        setProfileError('');
+      } catch (requestError) {
+        if (version !== requestVersion.current) return;
         setProfile(null);
+        setProfileError(requestError instanceof ApiError && requestError.status === 404
+          ? ''
+          : 'Não foi possível carregar seu perfil. Verifique a conexão e tente novamente.');
       }
     } else {
       setProfile(null);
+      setProfileError('');
     }
     setReady(true);
   }, []);
 
   useEffect(() => {
     void refreshSession();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      void refreshSession(nextSession);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      void refreshSession(nextSession, event);
     });
-    return () => subscription.unsubscribe();
+    return () => {
+      requestVersion.current += 1;
+      subscription.unsubscribe();
+    };
   }, [refreshSession]);
 
-  if (!ready) return <p className="p-8">Iniciando sessão...</p>;
+  if (!ready) return <div className="auth-initializing" role="status"><span className="ui-spinner" aria-hidden="true" />Verificando sessão...</div>;
 
   return <AppContext.Provider value={{
     session,
     profile,
+    profileError,
+    authNotice,
+    clearAuthNotice: () => setAuthNotice(''),
     refresh: async () => refreshSession(),
   }}>
     {children}
