@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: github-pages
+      name: nutri-med-preview
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Implantar no GitHub Pages
