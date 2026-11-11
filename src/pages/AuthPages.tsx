@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../api';
 import { useApp } from '../app/AppContext';
 import { Layout } from '../components/Layout';
@@ -8,10 +8,13 @@ import { errorMessage } from '../utils/errors';
 
 export function AuthPage({ mode }: { mode: 'login' | 'cadastro' | 'recuperar' }) {
   const navigate = useNavigate();
+  const { search } = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [kind, setKind] = useState<'cliente' | 'prestador'>('cliente');
+  const [kind, setKind] = useState<'cliente' | 'prestador'>(
+    new URLSearchParams(search).get('tipo') === 'prestador' ? 'prestador' : 'cliente',
+  );
   const [city, setCity] = useState('');
   const [about, setAbout] = useState('');
   const [category, setCategory] = useState('');
