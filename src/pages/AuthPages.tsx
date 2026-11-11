@@ -6,9 +6,14 @@ import { Layout } from '../components/Layout';
 import { Notice } from '../components/Notice';
 import { errorMessage } from '../utils/errors';
 
+export function safeInternalPath(value: unknown) {
+  return typeof value === 'string' && /^\/(?!\/)/.test(value) && !value.includes('\\') ? value : '/dashboard';
+}
+
 export function AuthPage({ mode }: { mode: 'login' | 'cadastro' | 'recuperar' }) {
   const navigate = useNavigate();
-  const { search } = useLocation();
+  const routeLocation = useLocation();
+  const { search } = routeLocation;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -52,7 +57,8 @@ export function AuthPage({ mode }: { mode: 'login' | 'cadastro' | 'recuperar' })
       } else {
         const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
         if (authError) throw authError;
-        navigate('/dashboard');
+        const intendedPath = (routeLocation.state as { from?: unknown } | null)?.from;
+        navigate(safeInternalPath(intendedPath), { replace: true });
       }
     } catch (submitError) {
       setError(errorMessage(submitError));
