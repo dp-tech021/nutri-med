@@ -1,9 +1,9 @@
 # Nutri-Med — Backlog e roadmap de desenvolvimento
 
-> Registro criado em 2026-11-10. Esta branch contém **apenas planejamento e templates**. As Issues estão criadas e abertas; nenhuma delas foi concluída automaticamente.
+> Registro criado em 2026-11-10. Esta branch contém **apenas planejamento e templates**. As **37 Issues** estão criadas e abertas; nenhuma delas foi concluída automaticamente.
 
 ## Visão e limites do projeto
-Plataforma web em que **clientes** encontram prestadores, solicitam orçamento, recebem propostas versionadas, aceitam condições e acompanham a execução e conclusão. O MVP **não processa pagamentos**. O posicionamento entre marketplace genérico e saúde/nutrição depende da decisão de [NM-01](https://github.com/dp-tech021/nutri-med/issues/6). Não presumir tratamento de dados de saúde sem avaliação de risco.
+Plataforma web em que **clientes** encontram prestadores, solicitam orçamento, recebem propostas versionadas, aceitam condições e acompanham a execução e conclusão. O MVP **não processa pagamentos**. O posicionamento entre marketplace genérico e saúde/nutrição depende da decisão de [NM-01](https://github.com/dp-tech021/nutri-med/issues/6). Não presumir tratamento de dados de saúde sem avaliação de risco. Consultar [perguntas e decisões pendentes](questoes-em-aberto.md): nicho, modelo comercial, categorias, profissionais, suporte, métricas e limites operacionais.
 
 ## Donos das áreas (GitHub assignees)
 - **Frontend, UX, acessibilidade, configurações de segurança do frontend, revisão de privacidade e coordenação da segurança:** [@Id-UserDanilo](https://github.com/Id-UserDanilo).
@@ -63,13 +63,22 @@ Plataforma web em que **clientes** encontram prestadores, solicitam orçamento, 
 | [NM-30](https://github.com/dp-tech021/nutri-med/issues/35) | F4 | P3 | Backend | o-tedd | Integração futura com gateway |
 | [NM-31](https://github.com/dp-tech021/nutri-med/issues/36) | F4 | P3 | Frontend | Id-UserDanilo | Interface futura de checkout real |
 | [NM-32](https://github.com/dp-tech021/nutri-med/issues/37) | F4 | P3 | Backend | o-tedd | Webhooks, split, repasses e estornos |
+| [NM-33](https://github.com/dp-tech021/nutri-med/issues/39) | F1 | P0 | Produto | Id-UserDanilo + o-tedd | Monetização, cliente pagante, comissões e recebedor |
+| [NM-34](https://github.com/dp-tech021/nutri-med/issues/40) | F1 | P0 | Produto | Id-UserDanilo + o-tedd | Categorias e elegibilidade/credenciais de prestadores |
+| [NM-35](https://github.com/dp-tech021/nutri-med/issues/41) | F1-F3 | P0 | Produto | Id-UserDanilo + o-tedd | Termos, suporte, disputas e responsabilidade |
+| [NM-36](https://github.com/dp-tech021/nutri-med/issues/42) | F1 | P1 | Produto | Id-UserDanilo + o-tedd | Métricas de sucesso e critérios de piloto |
+| [NM-37](https://github.com/dp-tech021/nutri-med/issues/43) | F1-F2 | P1 | Produto | Id-UserDanilo + o-tedd | Regiões, preços e limites operacionais |
 
 ## PRs pré-existentes e cuidados com integração
+- [PR #38](https://github.com/dp-tech021/nutri-med/pull/38): backlog, regras de trabalho, README, decisões pendentes e templates; revisão antes de merge.
 - [PR #2](https://github.com/dp-tech021/nutri-med/pull/2): diretrizes e escopo do MVP; revisão antes do merge.
 - [PR #3](https://github.com/dp-tech021/nutri-med/pull/3): arquitetura Supabase e custo zero; reconciliar com a base.
 - [PR #4](https://github.com/dp-tech021/nutri-med/pull/4): implementação de frontend/backend em branch **não integrada**. Existe CI frontend, mas testes de banco e fluxo completo seguem pendentes.
 - [PR #5](https://github.com/dp-tech021/nutri-med/pull/5): pagamento **simulado**, baseado na branch do PR #4; não cobrar nem fazer merge isolado sem revisão.
 - [PR #1](https://github.com/dp-tech021/nutri-med/pull/1): teste de conexão encerrado sem merge.
+
+## Questões e decisões ainda abertas
+As novas Issues **NM-33–NM-37** registram dúvidas de negócio que não devem ser respondidas por suposição. Consulte [docs/questoes-em-aberto.md](questoes-em-aberto.md) para as perguntas e responsáveis, e responda nas Issues antes de alterar regras de produto.
 
 ## Consultas rápidas
 - [Todas as Issues](https://github.com/dp-tech021/nutri-med/issues)
