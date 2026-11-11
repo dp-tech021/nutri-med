@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { Card, LinkButton } from '../components/ui';
 
@@ -41,11 +42,12 @@ function MarketplaceIllustration() {
 }
 
 export function HomePage() {
+  const { hash } = useLocation();
   useEffect(() => {
-    if (window.location.hash === '#como-funciona') {
+    if (hash === '#como-funciona') {
       document.getElementById('como-funciona')?.scrollIntoView();
     }
-  }, []);
+  }, [hash]);
 
   return <Layout>
     <section className="hero" aria-labelledby="hero-title">
