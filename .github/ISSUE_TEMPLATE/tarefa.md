@@ -1,9 +1,8 @@
 ---
 name: "Tarefa do Nutri-Med"
 about: "Nova tarefa de frontend, backend, segurança ou documentação"
-title: "[NM-XX][P1][Frontend] Descrição objetiva"
+title: "[NM-XX][P?][Área] Descrição objetiva"
 labels: ["enhancement"]
-assignees: []
 ---
 
 ## Objetivo
