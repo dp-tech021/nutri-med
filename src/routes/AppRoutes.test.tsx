@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import type { Session } from '@supabase/supabase-js';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { AppContext } from '../app/AppContext';
@@ -17,5 +18,16 @@ describe('proteção de rotas', () => {
     expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeVisible();
     expect(screen.getByLabelText('localização')).toHaveTextContent('"pathname":"/login"');
     expect(screen.getByLabelText('localização')).toHaveTextContent('/pedido/abc?origem=painel');
+  });
+
+  it('retorna ao destino interno quando a sessão já está ativa no login', async () => {
+    const session = { user: { id: 'user-demo' } } as Session;
+    render(<AppContext.Provider value={{ session, profile: null, refresh: async () => undefined }}>
+      <MemoryRouter initialEntries={[{ pathname: '/login', state: { from: '/retorno-teste' } }]}>
+        <AppRoutes /><LocationSnapshot />
+      </MemoryRouter>
+    </AppContext.Provider>);
+    expect(await screen.findByText('Página não encontrada')).toBeVisible();
+    expect(screen.getByLabelText('localização')).toHaveTextContent('"pathname":"/retorno-teste"');
   });
 });
