@@ -19,7 +19,7 @@ Plataforma web para clientes encontrarem prestadores, solicitarem orçamentos e 
 - Não usar dados pessoais reais, não ativar billing ou deploy.
 
 ## Pré-requisitos
-Git, Node.js LTS, npm e Docker ou runtime compatível. Necessários recursos locais para os contêineres Supabase.
+Git, Node.js 24 LTS, npm 11 e, para a stack completa, Docker ou runtime compatível. O frontend isolado não precisa iniciar os contêineres Supabase, mas as jornadas que leem ou gravam dados dependem da API e do banco locais.
 
 ## Como executar localmente
 ```bash
@@ -27,7 +27,24 @@ git clone https://github.com/dp-tech021/nutri-med.git
 cd nutri-med
 git fetch origin
 git checkout feat/mvp-plataforma-servicos
-npm install
+nvm install
+nvm use
+npm ci
+```
+
+Para validar e iniciar somente o frontend:
+
+```bash
+npm run typecheck
+npm test
+npm run lint
+npm run build
+npm run dev
+```
+
+Sem a stack Supabase, a interface abre, mas catálogo, autenticação e demais operações de dados não funcionam. Para executar a integração local completa:
+
+```bash
 npx supabase start
 npx supabase status
 ```
@@ -44,10 +61,17 @@ Abra a URL indicada pelo Vite (geralmente localhost:5173). A API usa `verify_jwt
 ```bash
 npm run typecheck
 npm test
+npm run lint
 npm run build
 npx supabase db reset
 ```
-Esses comandos são instruções, **não evidência de que passaram**. O script `npm run test:integration` cria três contas sintéticas e testa o fluxo completo na stack local, mas ainda não foi executado. O ambiente desta revisão não possui Docker e não conseguiu instalar dependências para teste integrado.
+Esses comandos são instruções, **não evidência de que passaram**; cada PR deve registrar os resultados reais. O script `npm run test:integration` cria três contas sintéticas e testa o fluxo completo na stack local, mas depende do Supabase iniciado e de credenciais exclusivamente locais.
+
+### Dependências reproduzíveis
+
+As dependências diretas usam versões exatas e o `package-lock.json` registra toda a árvore resolvida. Isso torna `npm ci` previsível para os dois desenvolvedores e para a CI; atualizações passam a ser explícitas e precisam regenerar o lockfile e repetir todos os checks. Não edite o lockfile manualmente.
+
+A linha 2.x da CLI do Supabase foi preservada para evitar uma migração implícita para a versão 3. As versões e compatibilidades foram conferidas no [registro npm](https://www.npmjs.com/), na documentação do [Node.js](https://nodejs.org/en/about/previous-releases), do [Vite](https://vite.dev/guide/), do [Tailwind CSS](https://tailwindcss.com/docs/installation/using-vite), do [React Router](https://reactrouter.com/start/data/installation), do [Supabase](https://supabase.com/docs/guides/local-development) e do [ESLint](https://eslint.org/docs/latest/use/getting-started).
 
 ### Roteiro de QA obrigatório
 1. Criar cliente, prestador e terceiro sem vínculo em ambiente de teste; verificar e-mail.
