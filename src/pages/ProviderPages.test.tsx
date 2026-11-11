@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Session } from '@supabase/supabase-js';
 import { MemoryRouter } from 'react-router-dom';
@@ -55,6 +55,34 @@ describe('painel do prestador', () => {
     renderPage(<MyServicesPage />);
     expect(await screen.findByText('Não foi possível carregar seus serviços.')).toBeVisible();
     expect(screen.queryByText(/DATABASE_INTERNAL_DETAIL/)).not.toBeInTheDocument();
+  });
+
+  it('ignora a resposta antiga quando o prestador troca de sessão', async () => {
+    let finishOld: ((value: unknown) => void) | undefined;
+    const oldSession = { ...context.session, access_token: 'old-token' } as Session;
+    const newSession = { ...context.session, access_token: 'new-token' } as Session;
+    const activeService = {
+      id: 'new-service', title: 'Anúncio da conta nova', description: 'Descrição de teste',
+      category: 'limpeza', city: 'Recife', modality: 'online',
+      price_type: 'fixo', price_cents: 10000, active: true,
+    };
+    mocks.api.mockImplementation((_path: string, _method: string, _body: unknown, currentSession: Session) => {
+      if (currentSession.access_token === 'old-token') {
+        return new Promise((resolve) => { finishOld = resolve; });
+      }
+      return Promise.resolve([activeService]);
+    });
+    const page = (session: Session) => (
+      <AppContext.Provider value={{ ...context, session }}>
+        <MemoryRouter><MyServicesPage /></MemoryRouter>
+      </AppContext.Provider>
+    );
+    const view = render(page(oldSession));
+    await waitFor(() => expect(mocks.api).toHaveBeenCalledTimes(1));
+    view.rerender(page(newSession));
+    expect(await screen.findByText('Anúncio da conta nova')).toBeVisible();
+    await act(async () => finishOld?.([{ ...activeService, id: 'old-service', title: 'Anúncio antigo' }]));
+    expect(screen.queryByText('Anúncio antigo')).not.toBeInTheDocument();
   });
 
   it('separa pedidos novos de solicitações que já têm proposta', async () => {
