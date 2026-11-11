@@ -1,6 +1,8 @@
+import { Alert } from './ui';
+
 export function Notice({ error, ok }: { error?: string; ok?: string }) {
   return <>
-    {error && <p role="alert" className="error">{error}</p>}
-    {ok && <p role="status">{ok}</p>}
+    {error && <Alert variant="error" title="Não foi possível concluir">{error}</Alert>}
+    {ok && <Alert variant="success" title="Tudo certo">{ok}</Alert>}
   </>;
 }

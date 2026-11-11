@@ -4,6 +4,7 @@ import { api, type RequestItem, type Service } from '../api';
 import { useApp } from '../app/AppContext';
 import { Layout } from '../components/Layout';
 import { Notice } from '../components/Notice';
+import { Button, Card, ConfirmationModal, EmptyState, LinkButton, StatusBadge } from '../components/ui';
 import { errorMessage } from '../utils/errors';
 
 export function DashboardPage() {
@@ -11,6 +12,8 @@ export function DashboardPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [requests, setRequests] = useState<RequestItem[]>([]);
   const [error, setError] = useState('');
+  const [pendingServiceId, setPendingServiceId] = useState<string | null>(null);
+  const [deactivating, setDeactivating] = useState(false);
 
   useEffect(() => {
     if (!session || !profile) return;
@@ -25,12 +28,15 @@ export function DashboardPage() {
   }, [session, profile]);
 
   async function deactivate(id: string) {
-    if (!window.confirm('Desativar anúncio? Pedidos anteriores serão preservados.')) return;
+    setDeactivating(true);
     try {
       await api('/services/' + id, 'PATCH', { active: false }, session);
       setServices((current) => current.map((service) => service.id === id ? { ...service, active: false } : service));
+      setPendingServiceId(null);
     } catch (requestError) {
       setError(errorMessage(requestError));
+    } finally {
+      setDeactivating(false);
     }
   }
 
@@ -38,22 +44,33 @@ export function DashboardPage() {
     <h1 className="text-3xl font-bold">Painel {profile?.kind === 'prestador' ? 'do prestador' : 'do cliente'}</h1>
     <Notice error={error} />
     {profile?.kind === 'prestador' && <>
-      <p className="my-4"><Link className="btn" to="/novo-servico">Publicar serviço</Link></p>
+      <p className="my-4"><LinkButton to="/novo-servico">Publicar novo serviço</LinkButton></p>
       <h2 className="font-semibold text-xl my-3">Meus anúncios</h2>
       <div className="grid gap-3">
-        {services.map((service) => <div className="card" key={service.id}>
+        {services.map((service) => <Card as="div" key={service.id}>
           <strong>{service.title}</strong> — {service.city}
           <Link className="ml-3" to={'/editar-servico/' + service.id}>Editar</Link>
-          <button className="btn btn-outline ml-3" onClick={() => void deactivate(service.id)}>Desativar</button>
-        </div>)}
+          {service.active !== false && <Button className="ml-3" variant="secondary" onClick={() => setPendingServiceId(service.id)}>Desativar anúncio</Button>}
+        </Card>)}
+        {!services.length && <EmptyState title="Nenhum anúncio publicado" description="Publique um serviço para começar a receber solicitações." />}
       </div>
     </>}
     <h2 className="font-semibold text-xl my-4">Solicitações e atendimentos</h2>
     <div className="grid gap-3">
-      {requests.map((request) => <Link className="card block" key={request.id} to={'/pedido/' + request.id}>
-        <strong>{request.snapshot_title}</strong><p>{request.status.replaceAll('_', ' ')}</p>
+      {requests.map((request) => <Link className="ui-card block" key={request.id} to={'/pedido/' + request.id}>
+        <strong>{request.snapshot_title}</strong><p><StatusBadge status={request.status} /></p>
       </Link>)}
-      {!requests.length && <p>Nenhuma solicitação ainda.</p>}
+      {!requests.length && <EmptyState title="Nenhuma solicitação ainda" description="Quando houver movimentações, elas aparecerão neste painel." />}
     </div>
+    <ConfirmationModal
+      open={Boolean(pendingServiceId)}
+      title="Desativar anúncio?"
+      description="O anúncio deixa de aparecer no catálogo. Pedidos anteriores serão preservados."
+      confirmLabel="Desativar anúncio"
+      destructive
+      busy={deactivating}
+      onClose={() => setPendingServiceId(null)}
+      onConfirm={() => { if (pendingServiceId) void deactivate(pendingServiceId); }}
+    />
   </Layout>;
 }

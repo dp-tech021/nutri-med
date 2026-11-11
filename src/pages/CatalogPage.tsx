@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { api, money, type Service } from '../api';
 import { Layout } from '../components/Layout';
-import { Notice } from '../components/Notice';
+import { Button, Card, EmptyState, ErrorState, LoadingState } from '../components/ui';
 import { errorMessage } from '../utils/errors';
 
 type Filters = { category: string; city: string; term: string; searchIn: string; modality: string };
@@ -85,20 +85,20 @@ export function CatalogPage() {
       <label className="field">Categoria<select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">Todas</option>{categories.map((item) => <option key={item.slug} value={item.slug}>{item.label}</option>)}</select></label>
       <label className="field">Cidade<input value={city} onChange={(event) => setCity(event.target.value)} /></label>
       <label className="field">Modalidade<select value={modality} onChange={(event) => setModality(event.target.value)}><option value="">Todas</option><option value="online">Online</option><option value="presencial">Presencial</option></select></label>
-      <div className="self-end"><button className="btn" disabled={loading}>Aplicar filtros</button></div>
+      <div className="self-end"><Button disabled={loading}>Aplicar filtros</Button></div>
     </form>
-    <Notice error={error} />
-    {loading && <p role="status">Carregando serviços...</p>}
+    {error && <ErrorState description={error} onRetry={() => setFilters({ ...filters })} />}
+    {loading && <LoadingState label="Carregando serviços..." />}
     <div className="grid md:grid-cols-2 gap-4">
-      {items.map((service) => <article className="card" key={service.id}>
+      {items.map((service) => <Card as="article" key={service.id}>
         <h2 className="text-xl font-semibold">{service.title}</h2>
         <p>{service.provider_name} • {service.category} • {service.city} • {service.modality}</p>
         <p>{service.description.slice(0, 180)}</p>
         <p className="font-semibold my-2">{money(service.price_cents)}</p>
         <Link to={'/servico/' + service.id}>Ver detalhes</Link>
-      </article>)}
+      </Card>)}
     </div>
-    {!items.length && !error && !loading && <p className="my-5">Nenhum serviço ativo encontrado.</p>}
-    {cursor && <button className="btn btn-outline my-6" disabled={loading} onClick={() => void more()}>Carregar mais</button>}
+    {!items.length && !error && !loading && <EmptyState title="Nenhum serviço ativo encontrado" description="Tente remover filtros ou buscar outro termo." />}
+    {cursor && <Button variant="secondary" className="my-6" disabled={loading} onClick={() => void more()}>Carregar mais serviços</Button>}
   </Layout>;
 }
