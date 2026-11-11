@@ -70,8 +70,10 @@ export function Layout({ children }: { children: ReactNode }) {
       <nav aria-label="Navegação do rodapé">
         <Link to="/servicos">Explorar serviços</Link>
         <Link to="/#como-funciona">Como funciona</Link>
-        <Link to="/login">Entrar</Link>
-        <Link to="/cadastro">Criar conta</Link>
+        {session ? <Link to="/dashboard">Painel</Link> : <>
+          <Link to="/login">Entrar</Link>
+          <Link to="/cadastro">Criar conta</Link>
+        </>}
       </nav>
     </Container></footer>
   </>;
