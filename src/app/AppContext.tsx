@@ -6,6 +6,9 @@ export type AppContextValue = {
   session: Session | null;
   profile: Profile | null;
   refresh: () => Promise<void>;
+  profileError?: string;
+  authNotice?: string;
+  clearAuthNotice?: () => void;
 };
 
 export const AppContext = createContext<AppContextValue>({

@@ -27,7 +27,7 @@ export function ServiceDetailsPage() {
 
   async function request(event: FormEvent) {
     event.preventDefault();
-    if (!session) return navigate('/login');
+    if (!session) return navigate('/login', { state: { from: `/servico/${id}` } });
     setBusy(true);
     setError('');
     try {
