@@ -11,6 +11,7 @@ import { PublicProviderPage } from '../pages/PublicProviderPage';
 import { RequestDetailsPage } from '../pages/RequestDetailsPage';
 import { ServiceDetailsPage } from '../pages/ServiceDetailsPage';
 import { EditServicePage, NewServicePage } from '../pages/ServiceFormPages';
+import { MyServicesPage, ProviderProposalsPage, ReceivedRequestsPage } from '../pages/ProviderPages';
 import { ErrorState, LoadingState } from '../components/ui';
 
 const DesignSystemPage = import.meta.env.DEV
@@ -49,6 +50,15 @@ export function AppRoutes() {
     <Route path="/editar-servico/:id" element={!session
       ? loginRedirect
       : profile?.kind !== 'prestador' ? <Navigate to="/dashboard" replace /> : <EditServicePage />} />
+    <Route path="/meus-servicos" element={!session
+      ? loginRedirect
+      : profile?.kind !== 'prestador' ? <Navigate to="/dashboard" replace /> : <MyServicesPage />} />
+    <Route path="/solicitacoes-recebidas" element={!session
+      ? loginRedirect
+      : profile?.kind !== 'prestador' ? <Navigate to="/dashboard" replace /> : <ReceivedRequestsPage />} />
+    <Route path="/propostas" element={!session
+      ? loginRedirect
+      : profile?.kind !== 'prestador' ? <Navigate to="/dashboard" replace /> : <ProviderProposalsPage />} />
     <Route path="/pedido/:id" element={!session
       ? loginRedirect
       : <RequestDetailsPage />} />

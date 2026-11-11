@@ -25,7 +25,9 @@ export async function api<T = unknown>(path: string, method = 'GET', body?: unkn
   if (!response.ok) throw new ApiError(typeof data.error === 'string' ? data.error : 'Falha na requisição', response.status);
   return data as T;
 }
-export type Service = { id:string; title:string;description:string;category:string;city:string;modality:string;price_type:string;price_cents:number|null;provider_name?:string;active?:boolean };
+export type ServicePriceType = 'fixo' | 'inicial' | 'orcamento';
+export type ServiceModality = 'online' | 'presencial';
+export type Service = { id:string; title:string;description:string;category:string;city:string;modality:ServiceModality;price_type:ServicePriceType;price_cents:number|null;provider_name?:string;active?:boolean };
 export type RequestItem = { id:string; snapshot_title:string;need:string;status:string;current_version:number;client_id:string;provider_id:string;created_at:string };
 export type Proposal = {version:number;price_cents:number;duration_days:number;scope:string};
 export const money = (cents:number|null) => cents == null ? 'Sob orçamento' : (cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
