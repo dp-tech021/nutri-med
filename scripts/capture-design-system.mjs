@@ -1,7 +1,7 @@
 import { mkdir } from 'node:fs/promises';
 import { chromium } from '@playwright/test';
 
-const baseUrl = process.env.SCREENSHOT_BASE_URL || 'http://127.0.0.1:4173';
+const baseUrl = process.env.SCREENSHOT_BASE_URL || 'http://127.0.0.1:5173';
 const outputDirectory = process.env.SCREENSHOT_OUTPUT_DIR || 'docs/screenshots/design-system';
 const executablePath = process.env.CHROMIUM_EXECUTABLE_PATH;
 
