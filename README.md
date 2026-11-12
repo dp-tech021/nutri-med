@@ -1,12 +1,12 @@
 # Nutri-Med
 
-**Status:** MVP de marketplace de serviços em desenvolvimento, **não validado para produção**. Repositório público: [dp-tech021/nutri-med](https://github.com/dp-tech021/nutri-med).
+**Status:** MVP de marketplace **generalista de prestação de serviços** em desenvolvimento, **não validado para produção**. Repositório público: [dp-tech021/nutri-med](https://github.com/dp-tech021/nutri-med).
 
-> **Decisão de produto em aberto:** o nome sugere saúde/nutrição, mas a especificação original trata de um marketplace de serviços de várias categorias. Ainda não foi aprovado se a plataforma será especializada em saúde ou generalista. Ver [NM-01](https://github.com/dp-tech021/nutri-med/issues/6) e [questões em aberto](docs/questoes-em-aberto.md). Não presumir prestação de serviços de saúde, dados médicos ou verificação profissional concluída.
+> **Posicionamento confirmado (11/11/2026):** o Nutri-Med é um **marketplace generalista de prestação de serviços**, conectando clientes e prestadores de diferentes categorias; **não é uma plataforma de saúde ou nutrição**. O nome atual pode sugerir outro segmento; eventual renomeação depende de decisão futura. A lista de categorias e as regras de elegibilidade ainda precisam de definição; não presumir serviços clínicos, coleta de dados de saúde ou verificação profissional concluída. Ver [NM-01](https://github.com/dp-tech021/nutri-med/issues/6) e [questões em aberto](docs/questoes-em-aberto.md).
 
 ## 1. O que é o projeto?
 
-O Nutri-Med visa conectar **clientes** que procuram serviços a **prestadores** que divulgam suas atividades e recebem pedidos de orçamento. A proposta do MVP é centralizar a descoberta de serviços, a negociação por proposta, o aceite de condições e o acompanhamento dos atendimentos até sua conclusão.
+O Nutri-Med visa conectar **clientes** que procuram serviços gerais a **prestadores** de diferentes categorias que divulgam suas atividades e recebem pedidos de orçamento. A proposta do MVP é centralizar a descoberta de serviços, a negociação por proposta, o aceite de condições e o acompanhamento dos atendimentos até sua conclusão.
 
 **Fluxo principal esperado:** cadastro → login → prestador publica serviço → cliente consulta catálogo → solicita orçamento → prestador envia/revisa proposta → cliente aceita os termos da versão vigente → execução → finalização informada pelo prestador → confirmação do cliente.
 
@@ -131,7 +131,7 @@ O teste integrado adicional está definido em `npm run test:integration`, **some
 | **F3 — Contratação e QA** | Propostas, aceite, execução, conclusão, testes reais e homologação |
 | **F4 — Futuro financeiro** | Checkout simulado (opcional) e, sob novas autorizações, gateway e repasses reais |
 
-**Decisões que ainda bloqueiam planejamento comercial:** nicho (saúde ou geral), tipos de cliente/prestador, categorias permitidas e verificação profissional, modelo de receita e recebedor, responsabilidades de suporte/disputas, limites operacionais, critérios de sucesso e tratamento de dados pessoais/sensíveis. Todas estão registradas em Issues e no documento de questões em aberto.
+**Decisões que ainda bloqueiam planejamento comercial:** categorias permitidas e elegibilidade/verificação de prestadores, tipos de cliente/prestador atendidos no piloto, modelo de receita e recebedor, responsabilidades de suporte/disputas, limites operacionais, critérios de sucesso e tratamento de dados pessoais. O posicionamento como marketplace generalista está definido; detalhes de público inicial e categorias ainda precisam ser aprovados. Todas estão registradas em Issues e no documento de questões em aberto.
 
 ## 8. Segurança, privacidade e definição de pronto
 
@@ -152,4 +152,4 @@ O teste integrado adicional está definido em `npm run test:integration`, **some
 
 **Licença do código ainda não definida**. Um repositório público no GitHub não concede, por si só, permissão geral para copiar, redistribuir ou utilizar o código fora das condições legais aplicáveis. A dupla deve decidir e registrar uma licença antes de distribuir o projeto. Ver [NM-38](https://github.com/dp-tech021/nutri-med/issues/44) quando cadastrada.
 
-**Não coletar dados sensíveis de saúde, lançar cobranças ou publicar produção antes das decisões, testes e autorizações necessários.**
+**Não coletar dados pessoais sensíveis, incluindo informações de saúde, nem lançar cobranças ou publicar produção antes das decisões, testes e autorizações necessários.**
