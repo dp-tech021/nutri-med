@@ -6,6 +6,7 @@ import { Layout } from '../components/Layout';
 import { Notice } from '../components/Notice';
 import { Button, Card, ConfirmationModal, EmptyState, LinkButton, StatusBadge } from '../components/ui';
 import { errorMessage } from '../utils/errors';
+import { ClientRequestsPage } from './ClientRequestsPage';
 
 export function DashboardPage() {
   const { session, profile } = useApp();
@@ -17,10 +18,10 @@ export function DashboardPage() {
 
   useEffect(() => {
     if (!session || !profile) return;
-    void api<RequestItem[]>('/requests', 'GET', undefined, session)
-      .then(setRequests)
-      .catch((requestError) => setError(errorMessage(requestError)));
     if (profile.kind === 'prestador') {
+      void api<RequestItem[]>('/requests', 'GET', undefined, session)
+        .then(setRequests)
+        .catch((requestError) => setError(errorMessage(requestError)));
       void api<Service[]>('/my/services', 'GET', undefined, session)
         .then(setServices)
         .catch((requestError) => setError(errorMessage(requestError)));
@@ -40,8 +41,10 @@ export function DashboardPage() {
     }
   }
 
+  if (profile?.kind === 'cliente') return <ClientRequestsPage />;
+
   return <Layout>
-    <h1 className="text-3xl font-bold">Painel {profile?.kind === 'prestador' ? 'do prestador' : 'do cliente'}</h1>
+    <h1 className="text-3xl font-bold">Painel do prestador</h1>
     <Notice error={error} />
     {profile?.kind === 'prestador' && <>
       <p className="my-4"><LinkButton to="/novo-servico">Publicar novo serviço</LinkButton></p>
