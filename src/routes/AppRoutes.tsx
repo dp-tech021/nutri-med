@@ -4,6 +4,7 @@ import { useApp } from '../app/AppContext';
 import { Layout } from '../components/Layout';
 import { AuthPage, ResetPasswordPage, safeInternalPath } from '../pages/AuthPages';
 import { CatalogPage } from '../pages/CatalogPage';
+import { ClientRequestsPage } from '../pages/ClientRequestsPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { HomePage } from '../pages/HomePage';
 import { ProfileSetupPage } from '../pages/ProfileSetupPage';
@@ -59,6 +60,12 @@ export function AppRoutes() {
     <Route path="/propostas" element={!session
       ? loginRedirect
       : profile?.kind !== 'prestador' ? <Navigate to="/dashboard" replace /> : <ProviderProposalsPage />} />
+    <Route path="/minhas-solicitacoes" element={!session
+      ? loginRedirect
+      : profileError
+        ? <Layout><ErrorState title="Não foi possível carregar seu perfil" description={profileError} onRetry={() => void refresh()} /></Layout>
+        : !profile ? <Navigate to="/dashboard" replace />
+        : profile.kind !== 'cliente' ? <Navigate to="/dashboard" replace /> : <ClientRequestsPage />} />
     <Route path="/pedido/:id" element={!session
       ? loginRedirect
       : <RequestDetailsPage />} />

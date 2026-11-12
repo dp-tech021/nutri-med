@@ -22,6 +22,7 @@ test('refatoração preserva as rotas públicas e privadas do MVP', () => {
     '/solicitacoes-recebidas',
     '/propostas',
     '/pedido/:id',
+    '/minhas-solicitacoes',
   ]) {
     assert.match(routes, new RegExp(`path=["']${path.replaceAll('/', '\\/')}["']`));
   }

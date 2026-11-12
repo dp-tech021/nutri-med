@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { api, money, type Proposal, type RequestItem } from '../api';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { ApiError, api, money, type Proposal, type RequestItem } from '../api';
 import { useApp } from '../app/AppContext';
 import { Layout } from '../components/Layout';
 import { Notice } from '../components/Notice';
-import { Breadcrumbs, Button, Card, ConfirmationModal, ErrorState, Field, Input, LoadingState, StatusBadge, Textarea } from '../components/ui';
-import { errorMessage } from '../utils/errors';
+import { Alert, Breadcrumbs, Button, Card, ConfirmationModal, ErrorState, Field, Input, LoadingState, StatusBadge, Textarea } from '../components/ui';
+import { formatRequestDate, requestErrorMessage, requestReference } from '../utils/requestUi';
 
 type RequestView = {
   request: RequestItem;
@@ -19,29 +19,42 @@ export function RequestDetailsPage() {
   const { session, profile } = useApp();
   const [data, setData] = useState<RequestView | null>(null);
   const [error, setError] = useState('');
+  const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [scope, setScope] = useState('');
   const [price, setPrice] = useState('');
   const [days, setDays] = useState('7');
   const [busy, setBusy] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
+  const requestVersion = useRef(0);
 
   const load = useCallback(async () => {
+    const version = ++requestVersion.current;
+    setError('');
+    setErrorStatus(null);
     try {
-      setData(await api<RequestView>('/requests/' + id, 'GET', undefined, session));
+      const nextData = await api<RequestView>('/requests/' + id, 'GET', undefined, session);
+      if (version === requestVersion.current) setData(nextData);
     } catch (requestError) {
-      setError(errorMessage(requestError));
+      if (version === requestVersion.current) {
+        setData(null);
+        setError(requestErrorMessage(requestError, 'details'));
+        setErrorStatus(requestError instanceof ApiError ? requestError.status : null);
+      }
     }
   }, [id, session]);
 
   useEffect(() => {
+    setData(null);
     if (session) void load();
+    return () => { requestVersion.current += 1; };
   }, [session, load]);
 
   async function act(action: string) {
     setBusy(true);
     setError('');
+    setErrorStatus(null);
     try {
-      await api('/requests/' + id + '/actions', 'POST', {
+      const updated = await api<RequestItem>('/requests/' + id + '/actions', 'POST', {
         action,
         ...(['enviar_proposta', 'revisar_proposta'].includes(action) ? {
           price_cents: Math.round(Number(price) * 100),
@@ -50,16 +63,21 @@ export function RequestDetailsPage() {
         } : {}),
         ...(action === 'aceitar' ? { version: data?.request.current_version } : {}),
       }, session);
+      setData((current) => current ? { ...current, request: updated } : current);
       await load();
       setPendingAction(null);
     } catch (requestError) {
-      setError(errorMessage(requestError));
+      setError(requestErrorMessage(requestError, 'action'));
+      setErrorStatus(requestError instanceof ApiError ? requestError.status : null);
     } finally {
       setBusy(false);
     }
   }
 
-  if (!data) return <Layout>{error ? <ErrorState description={error} onRetry={() => void load()} /> : <LoadingState label="Carregando solicitação..." />}</Layout>;
+  if (!data) return <Layout>{errorStatus === 401
+    ? <Alert variant="error" title="Sessão encerrada"><p>{error}</p><Link to="/login" state={{ from: `/pedido/${id}` }}>Entrar novamente</Link></Alert>
+    : error ? <ErrorState title={errorStatus === 404 ? 'Solicitação indisponível' : undefined} description={error} onRetry={errorStatus === 404 ? undefined : () => void load()} />
+      : <LoadingState label="Carregando solicitação..." />}</Layout>;
 
   const request = data.request;
   const customer = profile?.kind === 'cliente';
@@ -86,10 +104,16 @@ export function RequestDetailsPage() {
   const destructiveActions = ['cancelar', 'recusar_proposta', 'recusar_pedido'];
 
   return <Layout>
-    <Breadcrumbs items={[{ label: 'Painel', to: '/dashboard' }, { label: request.snapshot_title }]} />
+    <Breadcrumbs items={[{ label: customer ? 'Minhas solicitações' : 'Painel', to: customer ? '/minhas-solicitacoes' : '/dashboard' }, { label: request.snapshot_title }]} />
+    <p className="eyebrow">Referência {requestReference(request.id)}</p>
     <h1 className="text-2xl font-bold">{request.snapshot_title}</h1>
     <p className="my-2">Estado: <StatusBadge status={request.status} /></p>
-    <p>Pedido: {request.need}</p>
+    <Card className="request-detail-summary">
+      <h2>Necessidade informada</h2>
+      <p>{request.need}</p>
+      {request.desired_date && <p><strong>Data desejada:</strong> {formatRequestDate(request.desired_date)} <span className="muted">(preferência, não agendamento confirmado)</span></p>}
+      {request.created_at && <p className="muted">Enviada em {formatRequestDate(request.created_at)}</p>}
+    </Card>
     {lastProposal && <Card className="my-4">
       <h2 className="font-semibold">Proposta vigente — versão {lastProposal.version}</h2>
       <p>Valor: {money(lastProposal.price_cents)} • Prazo: {lastProposal.duration_days} dias</p>
@@ -103,16 +127,24 @@ export function RequestDetailsPage() {
     <div className="flex flex-wrap gap-2 my-4">
       {actions.map((action) => <Button variant={destructiveActions.includes(action) ? 'danger' : 'primary'} disabled={busy} key={action} onClick={() => setPendingAction(action)}>{actionLabels[action] ?? action.replaceAll('_', ' ')}</Button>)}
     </div>
-    <Notice error={error} />
+    {errorStatus === 401
+      ? <Alert variant="error" title="Sessão encerrada"><p>{error}</p><Link to="/login" state={{ from: `/pedido/${id}` }}>Entrar novamente</Link></Alert>
+      : <Notice error={error} />}
     <h2 className="font-semibold text-xl mt-4">Histórico</h2>
-    <ol className="list-decimal pl-5">
-      {data.events.map((event, index) => <li key={index}>{event.action.replaceAll('_', ' ')} — {event.to_status.replaceAll('_', ' ')}</li>)}
-    </ol>
+    {data.events.length ? <ol className="request-history">
+      {data.events.map((event, index) => <li key={index}><span>{event.action.replaceAll('_', ' ')}</span><StatusBadge status={event.to_status} />{formatRequestDate(event.created_at) && <small>{formatRequestDate(event.created_at)}</small>}</li>)}
+    </ol> : <p className="muted">Nenhuma atualização registrada além da criação.</p>}
     <p className="muted mt-4">Após o aceite, não é possível cancelar pelo fluxo comum. Conclusão exige confirmação do cliente.</p>
     <ConfirmationModal
       open={Boolean(pendingAction)}
-      title={pendingAction === 'aceitar' ? 'Aceitar esta proposta?' : 'Confirmar ação'}
-      description={pendingAction === 'aceitar' ? 'Você confirma a versão vigente e as condições apresentadas nesta proposta.' : `Você deseja ${pendingAction ? (actionLabels[pendingAction] ?? pendingAction).toLowerCase() : 'continuar'}?`}
+      title={pendingAction === 'aceitar' ? 'Aceitar esta proposta?' : pendingAction === 'cancelar' ? 'Cancelar solicitação?' : pendingAction === 'recusar_proposta' ? 'Recusar proposta?' : 'Confirmar ação'}
+      description={pendingAction === 'aceitar'
+        ? 'Você confirma a versão vigente e as condições apresentadas nesta proposta.'
+        : pendingAction === 'cancelar'
+          ? 'A solicitação será cancelada se o estado atual ainda permitir. Esta ação não pode ser desfeita pela interface.'
+          : pendingAction === 'recusar_proposta'
+            ? 'A proposta vigente será recusada se o estado atual ainda permitir.'
+            : `Você deseja ${pendingAction ? (actionLabels[pendingAction] ?? pendingAction).toLowerCase() : 'continuar'}?`}
       confirmLabel={pendingAction ? (actionLabels[pendingAction] ?? 'Confirmar') : 'Confirmar'}
       destructive={pendingAction ? destructiveActions.includes(pendingAction) : false}
       busy={busy}
