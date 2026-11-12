@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { Session } from '@supabase/supabase-js';
 import { MemoryRouter } from 'react-router-dom';
@@ -27,6 +27,29 @@ function renderPage() {
 
 describe('histórico do cliente', () => {
   beforeEach(() => apiMock.mockReset());
+
+  it('descarta resposta antiga de outra sessão após troca de conta', async () => {
+    let finishOld: ((value: RequestItem[]) => void) | undefined;
+    const previousSession = { ...context.session, access_token: 'old-token' } as Session;
+    const currentSession = { ...context.session, access_token: 'new-token' } as Session;
+    apiMock.mockImplementation((_path, _method, _body, session) => {
+      if (session?.access_token === 'old-token') {
+        return new Promise<RequestItem[]>((resolve) => { finishOld = resolve; });
+      }
+      return Promise.resolve([request('contratado', 'new-request')]);
+    });
+    const view = (session: Session) => (
+      <AppContext.Provider value={{ ...context, session }}>
+        <MemoryRouter><ClientRequestsPage /></MemoryRouter>
+      </AppContext.Provider>
+    );
+    const wrapper = render(view(previousSession));
+    await waitFor(() => expect(apiMock).toHaveBeenCalledTimes(1));
+    wrapper.rerender(view(currentSession));
+    expect(await screen.findByText('Pedido contratado')).toBeVisible();
+    await act(async () => finishOld?.([request('cancelado', 'old-request')]));
+    expect(screen.queryByText('Pedido cancelado')).not.toBeInTheDocument();
+  });
 
   it('mostra estado vazio com caminho para o catálogo', async () => {
     apiMock.mockResolvedValue([]);
