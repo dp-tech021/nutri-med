@@ -14,6 +14,8 @@ const statusLabels: Record<string, { label: string; variant: BadgeVariant }> = {
   concluido: { label: 'Concluído', variant: 'success' },
   cancelado: { label: 'Cancelado', variant: 'neutral' },
   recusado: { label: 'Recusado', variant: 'danger' },
+  pedido_recusado: { label: 'Pedido recusado', variant: 'danger' },
+  proposta_recusada: { label: 'Proposta recusada', variant: 'danger' },
 };
 export function StatusBadge({ status }: { status: string }) {
   const current = statusLabels[status] ?? { label: status.replaceAll('_', ' '), variant: 'neutral' as const };

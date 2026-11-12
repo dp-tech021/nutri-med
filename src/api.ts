@@ -28,7 +28,13 @@ export async function api<T = unknown>(path: string, method = 'GET', body?: unkn
 export type ServicePriceType = 'fixo' | 'inicial' | 'orcamento';
 export type ServiceModality = 'online' | 'presencial';
 export type Service = { id:string; title:string;description:string;category:string;city:string;modality:ServiceModality;price_type:ServicePriceType;price_cents:number|null;provider_name?:string;active?:boolean };
-export type RequestItem = { id:string; snapshot_title:string;need:string;status:string;current_version:number;client_id:string;provider_id:string;created_at:string };
+export type RequestItem = {
+  id: string; snapshot_title: string; snapshot_description?: string; snapshot_category?: string | null;
+  snapshot_city?: string | null; snapshot_modality?: string | null; snapshot_price_type?: string | null;
+  snapshot_price_cents?: number | null; need: string; desired_date?: string | null; status: string;
+  current_version: number; client_id: string; provider_id: string; provider_name?: string;
+  created_at: string; updated_at?: string;
+};
 export type Proposal = {version:number;price_cents:number;duration_days:number;scope:string};
 export const money = (cents:number|null) => cents == null ? 'Sob orçamento' : (cents/100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
 export function servicePrice(service: Pick<Service, 'price_type' | 'price_cents'>) {
