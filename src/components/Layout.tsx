@@ -63,16 +63,18 @@ export function Layout({ children }: { children: ReactNode }) {
     </header>
     <main id="conteudo"><Container className="page-content">{children}</Container></main>
     <footer className="site-footer"><Container className="footer-content">
-      <div>
+      <div className="footer-brand">
         <Link className="brand brand--footer" to="/" aria-label="Nutri-Med, página inicial"><span className="brand-mark" aria-hidden="true">N</span><span>Nutri-Med</span></Link>
-        <p>Protótipo de marketplace para solicitação de orçamentos. A plataforma não processa pagamentos.</p>
+        <p>Marketplace de serviços para encontrar prestadores, solicitar orçamentos e analisar propostas.</p>
+        <p className="footer-prototype">Protótipo em desenvolvimento. A plataforma não processa pagamentos.</p>
       </div>
-      <nav aria-label="Navegação do rodapé">
-        <Link to="/servicos">Explorar serviços</Link>
+      <nav aria-label="Navegação do rodapé"><strong>Navegação</strong>
+        <Link to="/">Início</Link>
+        <Link to="/servicos">Catálogo</Link>
         <Link to="/#como-funciona">Como funciona</Link>
-        <Link to="/login">Entrar</Link>
-        <Link to="/cadastro">Criar conta</Link>
+        {session ? <Link to="/dashboard">Painel</Link> : <><Link to="/login">Entrar</Link><Link to="/cadastro">Criar conta</Link></>}
       </nav>
+      <div className="footer-institutional"><strong>Informações</strong><p>Termos de uso, política de privacidade e canais oficiais estão em preparação.</p></div>
     </Container></footer>
   </>;
 }

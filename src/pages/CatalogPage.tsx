@@ -1,13 +1,14 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
-import { api, money, type Service } from '../api';
+import { useSearchParams } from 'react-router-dom';
+import { api, type Service } from '../api';
 import { Layout } from '../components/Layout';
-import { Button, Card, EmptyState, ErrorState, LoadingState } from '../components/ui';
+import { ServiceCard } from '../components/ServiceCard';
+import { Button, EmptyState, ErrorState, LoadingState } from '../components/ui';
 import { errorMessage } from '../utils/errors';
 
 type Filters = { category: string; city: string; term: string; searchIn: string; modality: string };
 
-function catalogParams(filters: Filters, cursor?: string) {
+export function catalogParams(filters: Filters, cursor?: string) {
   const params = new URLSearchParams({ limit: '12' });
   if (cursor) params.set('cursor', cursor);
   if (filters.category) params.set('category', filters.category);
@@ -21,17 +22,24 @@ function catalogParams(filters: Filters, cursor?: string) {
 }
 
 export function CatalogPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const urlCategory = searchParams.get('category')?.trim() || '';
   const [categories, setCategories] = useState<{ slug: string; label: string }[]>([]);
   const [items, setItems] = useState<Service[]>([]);
   const [error, setError] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(urlCategory);
   const [city, setCity] = useState('');
   const [term, setTerm] = useState('');
   const [searchIn, setSearchIn] = useState('service');
   const [modality, setModality] = useState('');
   const [cursor, setCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState<Filters>({ category: '', city: '', term: '', searchIn: 'service', modality: '' });
+  const [filters, setFilters] = useState<Filters>({ category: urlCategory, city: '', term: '', searchIn: 'service', modality: '' });
+
+  useEffect(() => {
+    setCategory(urlCategory);
+    setFilters((current) => current.category === urlCategory ? current : { ...current, category: urlCategory });
+  }, [urlCategory]);
 
   useEffect(() => {
     void api<{ slug: string; label: string }[]>('/categories').then(setCategories).catch(() => undefined);
@@ -73,7 +81,22 @@ export function CatalogPage() {
 
   function submit(event: FormEvent) {
     event.preventDefault();
-    setFilters({ category: category.trim(), city: city.trim(), term: term.trim(), searchIn, modality });
+    const nextCategory = category.trim();
+    setFilters({ category: nextCategory, city: city.trim(), term: term.trim(), searchIn, modality });
+    const nextParams = new URLSearchParams(searchParams);
+    if (nextCategory) nextParams.set('category', nextCategory);
+    else nextParams.delete('category');
+    setSearchParams(nextParams);
+  }
+
+  function clearFilters() {
+    setCategory('');
+    setCity('');
+    setTerm('');
+    setSearchIn('service');
+    setModality('');
+    setFilters({ category: '', city: '', term: '', searchIn: 'service', modality: '' });
+    setSearchParams(new URLSearchParams());
   }
 
   return <Layout>
@@ -85,19 +108,11 @@ export function CatalogPage() {
       <label className="field">Categoria<select value={category} onChange={(event) => setCategory(event.target.value)}><option value="">Todas</option>{categories.map((item) => <option key={item.slug} value={item.slug}>{item.label}</option>)}</select></label>
       <label className="field">Cidade<input value={city} onChange={(event) => setCity(event.target.value)} /></label>
       <label className="field">Modalidade<select value={modality} onChange={(event) => setModality(event.target.value)}><option value="">Todas</option><option value="online">Online</option><option value="presencial">Presencial</option></select></label>
-      <div className="self-end"><Button disabled={loading}>Aplicar filtros</Button></div>
+      <div className="flex flex-wrap gap-2 self-end"><Button disabled={loading}>Aplicar filtros</Button><Button type="button" variant="secondary" disabled={loading} onClick={clearFilters}>Limpar filtros</Button></div>
     </form>
     {error && <ErrorState description={error} onRetry={() => setFilters({ ...filters })} />}
     {loading && <LoadingState label="Carregando serviços..." />}
-    <div className="grid md:grid-cols-2 gap-4">
-      {items.map((service) => <Card as="article" key={service.id}>
-        <h2 className="text-xl font-semibold">{service.title}</h2>
-        <p>{service.provider_name} • {service.category} • {service.city} • {service.modality}</p>
-        <p>{service.description.slice(0, 180)}</p>
-        <p className="font-semibold my-2">{money(service.price_cents)}</p>
-        <Link to={'/servico/' + service.id}>Ver detalhes</Link>
-      </Card>)}
-    </div>
+    <div className="services-grid">{items.map((service) => <ServiceCard key={service.id} service={service} />)}</div>
     {!items.length && !error && !loading && <EmptyState title="Nenhum serviço ativo encontrado" description="Tente remover filtros ou buscar outro termo." />}
     {cursor && <Button variant="secondary" className="my-6" disabled={loading} onClick={() => void more()}>Carregar mais serviços</Button>}
   </Layout>;
