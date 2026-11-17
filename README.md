@@ -1,6 +1,6 @@
 # Nutri-Med — MVP em desenvolvimento
 
-Plataforma web para clientes encontrarem prestadores, solicitarem orçamentos e acompanharem atendimentos.
+Plataforma única com duas áreas: Saúde e Serviços Gerais. As áreas compartilham conta, autenticação e infraestrutura, com categorias, filtros e perfis próprios. Veja [a visão do produto](docs/visao-produto.md).
 
 **O código desta branch ainda não foi validado de ponta a ponta. Não publicar em produção.**
 
@@ -26,7 +26,7 @@ Git, Node.js 24 LTS, npm 11 e, para a stack completa, Docker ou runtime compatí
 git clone https://github.com/dp-tech021/nutri-med.git
 cd nutri-med
 git fetch origin
-git checkout feat/mvp-plataforma-servicos
+git checkout feat/nm-redefinicao-saude-servicos
 nvm install
 nvm use
 npm ci
