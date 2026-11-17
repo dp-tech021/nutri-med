@@ -54,3 +54,13 @@ it('falha de carregamento oferece recuperação sem controles de edição inoper
  await user.click(screen.getByRole('button',{name:'Tentar novamente'}));
  expect(await screen.findByLabelText(/^Profissão/)).toBeVisible();
 });
+
+it('prestador de Serviços mantém seu painel comercial sem receber o painel Saúde',async()=>{
+ mocked.mockImplementation(async(path)=>path==='/my/services'?[{...offer,domain:'services',price_type:'fixo',price_cents:15000}]:[]);
+ const servicesProfile={kind:'prestador' as const,domain:'services' as const,display_name:'Prestador sintético',city:'Cidade QA',category:'limpeza',about:''};
+ render(<AppContext.Provider value={{session,profile:servicesProfile,refresh:async()=>undefined}}><MemoryRouter><DashboardPage/></MemoryRouter></AppContext.Provider>);
+ expect(await screen.findByRole('heading',{name:'Painel do prestador'})).toBeVisible();
+ expect(screen.getByRole('link',{name:'Propostas'})).toHaveAttribute('href','/propostas');
+ expect(screen.getAllByRole('link',{name:'Novo serviço'})).toHaveLength(2);
+ expect(screen.queryByRole('heading',{name:'Painel de Saúde'})).not.toBeInTheDocument();
+});

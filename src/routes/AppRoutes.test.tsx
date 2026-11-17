@@ -93,3 +93,17 @@ it.each(['/novo-servico','/editar-servico/demo','/meus-servicos','/solicitacoes-
     expect(screen.queryByRole('link',{name:'Propostas'})).not.toBeInTheDocument();
   },
 );
+
+it('cliente autenticado navega em Saúde e Serviços sem depender do domain legado do perfil',async()=>{
+ const user=userEvent.setup();const session={user:{id:'client-cross-domain'},access_token:'synthetic'} as Session;
+ const profile={kind:'cliente' as const,domain:'services' as const,display_name:'Cliente sintético',city:'Cidade QA',category:'',about:''};
+ apiMock.mockImplementation(async(path)=>path==='/health-taxonomy'?{professions:[{slug:'medico',label:'Médico'}],specialties:[{profession:'medico',slug:'atuacao-geral',label:'Atuação geral informada'}]}:path==='/categories'?[]:{items:[],next_cursor:null});
+ render(<AppContext.Provider value={{session,profile,refresh:async()=>undefined}}><MemoryRouter><AppRoutes/><LocationSnapshot/></MemoryRouter></AppContext.Provider>);
+ await user.click(screen.getByRole('link',{name:'Encontrar profissional'}));
+ expect(await screen.findByRole('heading',{name:'Encontre profissionais de Saúde'})).toBeVisible();
+ expect(screen.getByLabelText('localização')).toHaveTextContent('"pathname":"/saude"');
+ await user.click(screen.getAllByRole('link',{name:'Serviços'})[0]);
+ expect(await screen.findByRole('heading',{name:'Encontre serviços'})).toBeVisible();
+ expect(screen.getByLabelText('localização')).toHaveTextContent('"pathname":"/servicos"');
+ expect(screen.queryByRole('heading',{name:'Entrar'})).not.toBeInTheDocument();
+});

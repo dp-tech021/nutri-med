@@ -42,14 +42,14 @@ export function PublicProviderPage() {
         <div>
           <p className="eyebrow">Perfil público do prestador</p>
           <h1>{data.provider.display_name}</h1>
-          <p className="provider-header__meta">{data.provider.city || 'Cidade não informada'}{data.provider.category ? ` · ${readableLabel(data.provider.category, '')}` : ''}</p>
+          <p className="provider-header__meta">{data.provider.city || 'Cidade não informada'}{data.provider.domain !== 'health' && data.provider.category ? ` · ${readableLabel(data.provider.category, '')}` : ''}</p>
         </div>
       </header>
       {data.provider.domain === 'health' && <section aria-label="Informações profissionais">
         <p>Profissão: {readableLabel(data.provider.profession, '')}</p>
         <p>Especialidade: {readableLabel(data.provider.specialty, '')}</p>
         <p>Modalidades: {data.modalities?.map(m => readableLabel(m, '')).join(', ') || 'Não informadas'}</p>
-        {data.provider.registration_reported && <p>Registro informado pelo profissional: {data.provider.registration_reported.council} {data.provider.registration_reported.number} — {data.provider.registration_reported.jurisdiction}. Não foi realizada verificação oficial pela plataforma.</p>}
+        {data.provider.registration_reported && <p>Registro informado pelo profissional: {data.provider.registration_reported.council} {data.provider.registration_reported.number} — {data.provider.registration_reported.jurisdiction}. Não verificado oficialmente pela plataforma.</p>}
         <p>Não envie sintomas, exames ou informações clínicas. Agendamento e atendimento não estão disponíveis na plataforma.</p>
       </section>}
       <section className="provider-about" aria-labelledby="provider-about-title">
@@ -58,7 +58,7 @@ export function PublicProviderPage() {
       </section>
       <section className="provider-services" aria-labelledby="provider-services-title">
         <div className="catalog-results-heading">
-          <h2 id="provider-services-title">Serviços ativos</h2>
+          <h2 id="provider-services-title">{data.provider.domain === 'health' ? 'Ofertas de Saúde' : 'Serviços ativos'}</h2>
           <span>{data.services.length} {data.services.length === 1 ? 'serviço' : 'serviços'}</span>
         </div>
         {data.services.length > 0

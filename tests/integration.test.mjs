@@ -182,3 +182,15 @@ test('domínios reais: catálogo, filtros, cursores, legado, perfis e projeçõe
   const anonymous=makeClient();assert((await anonymous.from('profiles').select('*')).error);
   assert((await anonymous.from('health_professions').select('*')).error);
 });
+
+test('taxonomia inicial de Saúde vem do banco e não declara certificação', {skip:!ready&&'Supabase local e chaves locais necessários'},async()=>{
+  const response=await request('/health-taxonomy');assert.equal(response.status,200);
+  const professions=['medico','nutricionista','psicologo','fisioterapeuta','outro-profissional-saude'];
+  for(const slug of professions){
+    assert(response.data.professions.some(p=>p.slug===slug));
+    const specialty=response.data.specialties.find(s=>s.profession===slug&&s.slug==='atuacao-geral');
+    assert(specialty);assert.equal(specialty.label,'Atuação geral informada');
+  }
+  assert.equal((await request('/catalog?domain=health&category=limpeza')).status,400);
+  assert.equal((await request('/catalog?profession=medico')).status,400);
+});

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { servicePrice, type Service } from '../api';
+import { visibleServicePrice, type Service } from '../api';
 import { Card } from './ui';
 
 export function readableLabel(value: string, fallback: string) {
@@ -9,7 +9,7 @@ export function readableLabel(value: string, fallback: string) {
 }
 
 export function ServiceCard({ service }: { service: Service }) {
-  const price = servicePrice(service);
+  const price = visibleServicePrice(service);
   return <Card as="article" className="service-card">
     <div className="service-card__visual" role="img" aria-label="Serviço sem imagem disponível">
       <span aria-hidden="true">{service.title.trim().charAt(0).toLocaleUpperCase('pt-BR') || 'S'}</span>
@@ -24,7 +24,7 @@ export function ServiceCard({ service }: { service: Service }) {
       <p className="service-card__location">{service.city || 'Cidade não informada'}</p>
       <p className="service-card__description">{service.description}</p>
       <div className="service-card__footer">
-        {service.domain === 'health' ? <p>{readableLabel(service.specialty, '')}</p> : <p className="service-price"><span>{price.label}</span><strong>{price.value}</strong></p>}
+        {price ? <p className="service-price"><span>{price.label}</span><strong>{price.value}</strong></p> : service.domain === 'health' && <p>{readableLabel(service.specialty, '')}</p>}
         <Link className="service-card__link" to={`/servico/${service.id}`} aria-label={`Ver detalhes de ${service.title}`}>Ver detalhes <span aria-hidden="true">→</span></Link>
       </div>
     </div>

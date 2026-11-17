@@ -47,3 +47,8 @@ export function servicePrice(service: Pick<Service, 'price_type' | 'price_cents'
     value: money(service.price_cents),
   };
 }
+
+/** Health storage price fields are schema compatibility, never a public quote. */
+export function visibleServicePrice(service: Service) {
+  return service.domain === 'health' ? null : servicePrice(service);
+}

@@ -18,7 +18,7 @@ export function catalogParams(filters: CatalogFilters, cursor?: string, domain: 
   if (domain === 'health' && filters.profession) params.set('profession', filters.profession);
   if (domain === 'health' && filters.specialty) params.set('specialty', filters.specialty);
   if (cursor) params.set('cursor', cursor);
-  if (filters.category) params.set('category', filters.category);
+  if (domain === 'services' && filters.category) params.set('category', filters.category);
   if (filters.city) params.set('city', filters.city);
   if (filters.modality) params.set('modality', filters.modality);
   if (filters.term) {

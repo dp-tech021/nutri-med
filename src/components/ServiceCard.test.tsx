@@ -34,3 +34,9 @@ describe('card de serviço', () => {
     expect(screen.getByText(/R\$\s*200,00/)).toBeVisible();
   });
 });
+
+it('Saúde não expõe sentinelas de categoria/preço mesmo que o payload contenha preço numérico',()=>{
+ render(<MemoryRouter><ServiceCard service={{...baseService,domain:'health',profession:'medico',specialty:'atuacao-geral',category:'outros',price_type:'fixo',price_cents:99999}}/></MemoryRouter>);
+ expect(screen.queryByText(/orçamento|preço|R\$|^Outros$/i)).not.toBeInTheDocument();
+ expect(screen.queryByText(/^verificado$/i)).not.toBeInTheDocument();
+});

@@ -124,3 +124,11 @@ it('Saúde consulta taxonomia, filtros e próximas páginas com domain=health', 
   await user.click(screen.getByRole('button',{name:'Limpar filtros'}));
   expect(screen.getByLabelText('Profissão')).toHaveValue('');
 });
+
+it('serializa somente filtros do domínio mesmo se o estado contiver campos antigos da outra área',()=>{
+ const mixed={category:'limpeza',city:'Recife',term:'teste',searchIn:'provider' as const,modality:'online',profession:'medico',specialty:'atuacao-geral'};
+ const health=catalogParams(mixed,undefined,'health');
+ expect(health.has('category')).toBe(false);expect(health.get('profession')).toBe('medico');expect(health.get('specialty')).toBe('atuacao-geral');
+ const services=catalogParams(mixed,undefined,'services');
+ expect(services.get('category')).toBe('limpeza');expect(services.has('profession')).toBe(false);expect(services.has('specialty')).toBe(false);
+});

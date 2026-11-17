@@ -26,6 +26,10 @@ try {
     else if(p==='/health-taxonomy')data={professions:[{slug:'prof-qa',label:'Profissão QA'}],specialties:[{profession:'prof-qa',slug:'esp-qa',label:'Especialidade QA'},{profession:'prof-qa',slug:'esp-dois',label:'Outra especialidade QA'}]};
     else if(p==='/my/services')data=[health?offer:service];
     else if(p==='/services/health-demo'&&method==='PATCH'){const body=route.request().postDataJSON();writes.push({path:p,body});Object.assign(offer,body);data=offer;}
+    else if(p?.startsWith('/providers/')){
+     const isHealth=p.endsWith('provider-health');
+     data={provider:{user_id:'provider-demo',display_name:'Perfil público sintético',city:'Cidade QA',about:'Apresentação sintética',domain:isHealth?'health':'services',...(isHealth?{profession:'prof-qa',specialty:'esp-qa',registration_reported:{council:'CONSELHO-QA',number:'123-QA',jurisdiction:'TESTE'}}:{category:'limpeza'})},services:[isHealth?offer:service],modalities:['online']};
+    }
     else if(p?.startsWith('/services/'))data={service:p.endsWith('health-demo')?offer:service,provider:{user_id:'provider-demo',display_name:'Prestador sintético',city:'Cidade QA',about:'Apresentação sintética',category:'limpeza'}};
     else if(p==='/requests'){data=method==='POST'?request:role==='third'?[]:[request];if(method==='POST')writes.push({path:p,body:route.request().postDataJSON()});}
     else if(p==='/requests/request-demo'){
@@ -75,7 +79,18 @@ try {
    await page.goto(base+'/servico/health-demo',{waitUntil:'networkidle'});
    await expect(page.getByRole('button',{name:'Solicitar atendimento',exact:true})).toBeDisabled();assert.equal(await page.getByRole('textbox').count(),0);
    await page.keyboard.press('Tab');await expect(page.locator(':focus-visible')).toHaveCount(1);
-   assert.deepEqual(errors,[]);results.push({width,role,status:'passed',healthSubmission:'blocked-by-contract',clinicalFields:0,horizontalOverflow:false});
+   for(const area of ['health','services']){
+    await page.goto(base+'/prestador/provider-'+area,{waitUntil:'networkidle'});
+    await expect(page.getByRole('heading',{name:'Perfil público sintético',exact:true})).toBeVisible();
+    if(area==='health'){
+     await expect(page.getByText(/Registro informado pelo profissional/)).toBeVisible();
+     await expect(page.getByText(/Não verificado oficialmente pela plataforma/)).toBeVisible();
+     assert.equal(await page.getByText(/Sob orçamento|Preço fixo|R\$/).count(),0);
+     assert.equal(await page.getByText('Verificado',{exact:true}).count(),0);
+    }else await expect(page.getByText(/150,00/)).toBeVisible();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`${area} profile overflow ${width}`);
+   }
+   assert.deepEqual(errors,[]);results.push({width,role,status:'passed',publicProfiles:'passed',healthSubmission:'blocked-by-contract',clinicalFields:0,horizontalOverflow:false});
    await context.close();
   }
  }

@@ -14,5 +14,6 @@ describe('perfil público por domínio',()=>{
     expect(screen.getByText('Modalidades: Online, Presencial')).toBeVisible();
     expect(screen.queryByText(/Registro informado pelo profissional/) !== null).toBe(publish);
     expect(screen.queryByText(/^verificado$/i)).not.toBeInTheDocument();
+    if(publish)expect(screen.getByText(/Não verificado oficialmente pela plataforma/)).toBeVisible();
   });
 });

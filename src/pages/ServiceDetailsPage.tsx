@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ApiError, api, servicePrice, type RequestItem, type Service } from '../api';
+import { ApiError, api, visibleServicePrice, type RequestItem, type Service } from '../api';
 import { useApp } from '../app/AppContext';
 import { HealthRequestNotice } from '../components/HealthRequestNotice';
 import { Layout } from '../components/Layout';
@@ -122,7 +122,7 @@ function ServiceDetailsContent({ item, profileKind, sessionActive, need, date, b
   onDateChange: (value: string) => void;
   onSubmit: (event: FormEvent) => void;
 }) {
-  const price = servicePrice(item.service);
+  const price = visibleServicePrice(item.service);
   const providerInitial = item.provider.display_name.trim().charAt(0).toLocaleUpperCase('pt-BR') || 'P';
   return <div className="service-details-layout">
     <article className="service-details-main">
@@ -132,7 +132,7 @@ function ServiceDetailsContent({ item, profileKind, sessionActive, need, date, b
       </div>
       <h1>{item.service.title}</h1>
       <p className="service-details-location">{item.service.city || 'Cidade não informada'}</p>
-      {item.service.domain !== 'health' && <p className="service-price service-price--details"><span>{price.label}</span><strong>{price.value}</strong></p>}
+      {price && <p className="service-price service-price--details"><span>{price.label}</span><strong>{price.value}</strong></p>}
       <section className="service-description" aria-labelledby="service-description-title">
         <h2 id="service-description-title">Sobre o serviço</h2>
         <p>{item.service.description}</p>

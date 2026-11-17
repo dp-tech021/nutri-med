@@ -10,7 +10,7 @@ try {
   sql(`create database ${database};`,'postgres');
   sql('create schema auth; create table auth.users(id uuid primary key);');
   const migrations=readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
-  for(const file of migrations.filter(f=>!f.includes('marketplace_domains')))sql(readFileSync('supabase/migrations/'+file,'utf8'));
+  for(const file of migrations.filter(f=>f<'202611170001_marketplace_domains.sql'))sql(readFileSync('supabase/migrations/'+file,'utf8'));
   sql(`insert into auth.users values ('00000000-0000-4000-8000-000000000001');
     insert into public.profiles(user_id,kind,display_name) values ('00000000-0000-4000-8000-000000000001','prestador','Legado sintético');
     insert into public.services(id,owner_id,title,description,category,city,modality,price_type,price_cents)
@@ -25,7 +25,20 @@ try {
     exception when foreign_key_violation or check_violation then null;
     end;
   end $$;`);
-  console.log('PASS: five original migrations, pre-migration legacy fixtures, additive migration, preserved IDs/prices/categories and domain constraints in isolated database');
+  for(const file of migrations.filter(f=>f>'202611170001_marketplace_domains.sql')) {
+    const migration=readFileSync('supabase/migrations/'+file,'utf8');
+    sql(migration);sql(migration); // Idempotence without deleting or replacing rows.
+  }
+  sql(`do $$ begin
+    if (select count(*) from public.health_professions) <> 5 then raise exception 'TAXONOMY_DUPLICATED'; end if;
+    if (select count(*) from public.health_specialties where slug='atuacao-geral') <> 5 then raise exception 'SPECIALTY_SEED_INVALID'; end if;
+    begin
+      alter table public.profiles drop constraint profiles_user_domain_unique;
+      raise exception 'COMPOSITE_UNIQUE_UNEXPECTEDLY_REMOVABLE';
+    exception when dependent_objects_still_exist then null;
+    end;
+  end $$;`);
+  console.log('PASS: five original migrations, pre-migration legacy fixtures, additive migration, preserved IDs/prices/categories domain constraints, seed idempotence and required composite UNIQUE in isolated database');
 } finally {
   sql(`drop database if exists ${database} with (force);`,'postgres');
 }
