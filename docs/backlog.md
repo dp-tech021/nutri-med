@@ -3,7 +3,18 @@
 > Registro criado em 2026-11-10. Este documento organiza planejamento e acompanhamento. Foram cadastradas **38 Issues**; a situação de cada uma deve ser conferida no GitHub. Nenhuma tarefa deve ser considerada concluída somente por ter sido cadastrada.
 
 ## Visão e limites do projeto
-Plataforma web em que **clientes** encontram prestadores, solicitam orçamento, recebem propostas versionadas, aceitam condições e acompanham a execução e conclusão. O MVP **não processa pagamentos**. O posicionamento entre marketplace genérico e saúde/nutrição depende da decisão de [NM-01](https://github.com/dp-tech021/nutri-med/issues/6). Não presumir tratamento de dados de saúde sem avaliação de risco. Consultar [perguntas e decisões pendentes](questoes-em-aberto.md): nicho, modelo comercial, categorias, profissionais, suporte, métricas e limites operacionais.
+Aplicação única com duas áreas distintas: **Saúde** e **Serviços Gerais**, compartilhando conta, autenticação, infraestrutura e design system. O fluxo de orçamento, propostas e conclusão existente pertence a Serviços Gerais. Saúde possui descoberta e perfil profissional; atendimento administrativo e clínico continuam bloqueados. A homologação e o hardening locais estão registrados em [homologação integrada](homologacao-integrada.md). O MVP **não processa pagamentos**. A decisão parcial da [NM-01](https://github.com/dp-tech021/nutri-med/issues/6) não encerra público-alvo, categorias, regiões, elegibilidade, verificação profissional ou regras comerciais. Ver [visão do produto](visao-produto.md).
+
+## Recorte histórico — PR #56
+
+> Registro da primeira entrega; as pendências técnicas descritas neste recorte foram evoluídas nas seções posteriores. Não representa o estado atual da branch de integração.
+- NM-01: registrar as duas áreas da mesma aplicação; manter aberta enquanto categorias iniciais, regiões, critérios/verificação profissional, monetização, regras comerciais e suporte estiverem pendentes.
+- NM-05: Home, navegação e rodapé com entradas distintas; Saúde informativa. Critérios e QA em [landing](landing.md).
+- Próxima etapa backend: revisar o contrato `MarketplaceDomain` na visão do produto, decidir taxonomias por domínio e planejar compatibilidade legada antes de qualquer migração. API, filtros e atributos de Saúde ainda não implementados.
+- NM-34/NM-37: aprovar categorias, critérios, registro profissional informado versus verificação oficial, regiões e modalidades por domínio.
+- NM-33/NM-35: definir monetização, regras comerciais e suporte. Não presumir jornada clínica nem aplicar orçamento de serviços à Saúde.
+- Validação integrada Supabase e jornadas reais seguem pendentes; testes frontend com dados sintéticos não comprovam essas integrações.
+
 
 ## Donos das áreas (GitHub assignees)
 - **Frontend, UX, acessibilidade, configurações de segurança do frontend, revisão de privacidade e coordenação da segurança:** [@Id-UserDanilo](https://github.com/Id-UserDanilo).
@@ -21,7 +32,7 @@ Plataforma web em que **clientes** encontram prestadores, solicitam orçamento, 
 | Fase | Conteúdo | Gate para avançar |
 | --- | --- | --- |
 | **F1 — Fundação** | Produto, documentação, stack, design system, landing page | Público-alvo decidido, comandos locais reproduzíveis, PRs revistos |
-| **F2 — Plataforma** | Login, perfis, serviços, catálogo, imagens, solicitações | Dados reais persistem, contas isoladas, interfaces integradas |
+| **F2 — Plataforma** | Login, perfis, serviços, catálogo, imagens, solicitações | Persistência com fixtures sintéticas, contas isoladas e interfaces integradas; dados reais dependem de autorização e política própria |
 | **F3 — Contratação e qualidade** | Propostas, aceite, estados, testes, homologação | Teste integrado sem skips críticos, segurança e concorrência verificadas |
 | **F4 — Evolução financeira** | Pagamento demonstrativo, gateway, checkout, repasses | Só após decisão comercial, análise de custos/regulação e autorização explícita |
 
@@ -71,6 +82,8 @@ Plataforma web em que **clientes** encontram prestadores, solicitam orçamento, 
 | [NM-38](https://github.com/dp-tech021/nutri-med/issues/44) | F1 | P1 | Produto/Processo | Id-UserDanilo + o-tedd | Definir licença e regras de uso do código |
 
 ## Histórico de PRs e cuidados com integração
+
+> Situação registrada na organização inicial de 10/11/2026, sem consulta atual ao GitHub. Pendências históricas de QA não substituem as evidências locais posteriores do relatório de homologação.
 - [PR #38](https://github.com/dp-tech021/nutri-med/pull/38): histórico da organização do README, backlog e templates.
 - [PR #2](https://github.com/dp-tech021/nutri-med/pull/2): diretrizes e escopo do MVP; revisão antes do merge.
 - [PR #3](https://github.com/dp-tech021/nutri-med/pull/3): arquitetura Supabase e custo zero; reconciliar com a base.
@@ -79,7 +92,7 @@ Plataforma web em que **clientes** encontram prestadores, solicitam orçamento, 
 - [PR #1](https://github.com/dp-tech021/nutri-med/pull/1): teste de conexão encerrado sem merge.
 
 ## Questões e decisões ainda abertas
-As Issues **NM-33–NM-38** registram decisões de negócio e licenciamento que não devem ser respondidas por suposição. Consulte [docs/questoes-em-aberto.md](questoes-em-aberto.md) para as perguntas e responsáveis, e responda nas Issues antes de alterar regras de produto.
+As Issues **NM-33–NM-38** registram decisões de negócio e licenciamento que não devem ser respondidas por suposição. Consulte [questões em aberto](questoes-em-aberto.md) e a [visão do produto](visao-produto.md) para as perguntas e responsáveis, e responda nas Issues antes de alterar regras de produto.
 
 ## Consultas rápidas
 - [Todas as Issues](https://github.com/dp-tech021/nutri-med/issues)
@@ -100,3 +113,23 @@ As Issues **NM-33–NM-38** registram decisões de negócio e licenciamento que 
 - Prioridade para ferramentas gratuitas; quotas, limitações de uptime, região, SMTP e domínio precisam ser verificadas na data da implantação.
 - Não ativar faturamento, publicar produção, criar pagamento real ou coletar dados sensíveis sem decisão e autorização explícitas.
 - Nada de chaves administrativas no frontend, em commits ou em chats com IA.
+
+## Incremento de catálogo/perfis por domínio
+
+A branch `feat/nm-catalogo-perfis-por-dominio` implementa o contrato técnico de descoberta; detalhes, limites de autoria e evidências em [catálogo por domínio](catalogo-dominios.md). Permanecem pendentes aprovação da taxonomia comercial e regiões, verificação profissional oficial, formulário profissional de Saúde, atendimento/agendamento, monetização e suporte. Não encerrar NM-01 por esta implementação.
+
+## Incremento de solicitações/painéis por domínio
+
+- Painel de Saúde: editar profissão/especialidade e modalidade por endpoints já validados; manter Serviços Gerais com orçamento, propostas, histórico e preços.
+- **Bloqueio de produto/API:** solicitação administrativa de Saúde ainda não tem contrato de criação/estados/acesso. CTA indisponível, sem campos clínicos. Definir a jornada antes de habilitar; não reutilizar automaticamente propostas/contratação.
+- Ver [decisões, bloqueios e evidências](solicitacoes-paineis-dominios.md). Atendimento, agenda médica, verificação oficial e pagamentos não estão concluídos nem autorizados por esta entrega.
+
+## Revisão de taxonomia inicial e modelo profissional
+
+Implementada a lista mínima de cinco profissões solicitadas e a opção técnica neutra `atuacao-geral`, sem certificação ou profissionais fictícios. Cliente é transversal; prestador mantém um domínio por conta no MVP. Multi-domínio profissional fica como evolução futura, sem implementação. Ver [revisão e evidências](revisao-taxonomia-saude.md). Permanecem bloqueados cadastro inicial Saúde na UI, envio administrativo de atendimento, agenda, verificação oficial e pagamentos reais.
+
+## Consolidação para revisão de integração — 17/11/2026
+
+A branch `integration/nm-mvp-saude-servicos` reúne frontend, backend, oito migrations ordenadas, homologação e hardening da origem `32c6a48`, com a documentação administrativa trazida da main. A revisão não cria PR, não integra na main nem aplica mudanças no Supabase remoto. O catálogo e os perfis Saúde estão implementados; a API bloqueia requests Saúde, e registro informado não é verificação oficial. Serviços Gerais possui orçamento, proposta, aceite, execução e conclusão. Upload continua 501 e pagamento real fora do escopo.
+
+Os resultados após o merge estão em [homologação integrada](homologacao-integrada.md). Não fechar Issues nem marcar os gates comerciais/operacionais como concluídos por esses testes locais. SMTP externo, acessibilidade completa, carga, idempotência de criação de solicitação e aplicação remota autorizada do hardening continuam pendentes. Todos os responsáveis, prioridades, links e as 38 Issues do planejamento foram preservados.

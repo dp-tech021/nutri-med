@@ -1,11 +1,11 @@
 # Nutri-Med — Questões de produto e operação em aberto
 
-> Revisado em 2026-11-10. **Pergunta registrada não significa decisão tomada.** Este documento complementa o backlog e aponta a Issue que deve registrar a resposta final, evidência e responsável.
+> Registro inicial de 10/11/2026, revisado para a integração em 17/11/2026. **Pergunta registrada não significa decisão tomada.** Este documento complementa o backlog e aponta a Issue que deve registrar a resposta final, evidência e responsável.
 >
-> A especificação original descreve um **marketplace de serviços em geral**, enquanto o nome Nutri-Med sugere saúde/nutrição. O uso de dados de saúde, a elegibilidade de profissionais, a cobrança de comissão e a operação financeira **não estão aprovados**.
+> A definição atual é uma plataforma única com **Saúde e Serviços Gerais**. A referência inicial a um marketplace de serviços em geral é histórica e não exclui Saúde. Descoberta/perfil Saúde estão implementados; atendimento administrativo/clínico, dados clínicos, verificação oficial de registros e operação financeira não estão habilitados. Ver [visão do produto](visao-produto.md).
 
 ## 1. Identidade e público-alvo — [NM-01](https://github.com/dp-tech021/nutri-med/issues/6)
-- [ ] Nutri-Med será plataforma exclusivamente de saúde/nutrição ou marketplace de serviços gerais?
+- [x] Decisão parcial de identidade: uma aplicação com Saúde e Serviços Gerais. Isso não fecha NM-01 nem decide o piloto, elegibilidade, monetização ou suporte.
 - [ ] Quais personas serão atendidas no MVP: cliente pessoa física, empresa, autônomo, clínica, profissional registrado etc.?
 - [ ] Qual problema principal resolve para cliente e prestador? Qual diferencial é mensurável?
 - [ ] O projeto é demonstração/portfólio, piloto fechado ou serviço comercial aberto?
@@ -17,7 +17,7 @@
 - [ ] Qual verificação da formação, licença ou registro profissional é necessária? Quem aprova?
 - [ ] Haverá moderação, denúncia e suspensão de anúncios? O que fica fora da versão 1?
 - [ ] Quais campos do anúncio, limites de texto, valores, prazos e imagens precisam ser aprovados?
-- [ ] Dados do cliente sobre sua saúde podem constar na descrição da solicitação? Caso afirmativo, há avaliação jurídica, restrição de acesso e finalidade clara?
+- [ ] Qual avaliação jurídica e desenho de minimização seriam necessários para uma eventual jornada administrativa futura de Saúde? **No MVP atual não coletar sintomas, exames, diagnósticos ou histórico clínico e não reutilizar o formulário de orçamento de Serviços em Saúde.**
 
 ## 3. Modelo de negócios e pagamentos — [NM-33](https://github.com/dp-tech021/nutri-med/issues/39), [NM-30](https://github.com/dp-tech021/nutri-med/issues/35), [NM-32](https://github.com/dp-tech021/nutri-med/issues/37)
 - [ ] Quem é o cliente que paga pela plataforma? Ela cobrará clientes, prestadores ou nenhum deles no MVP?
@@ -43,7 +43,7 @@
 ## 6. Infraestrutura, segurança e release — [NM-03](https://github.com/dp-tech021/nutri-med/issues/8), [NM-24](https://github.com/dp-tech021/nutri-med/issues/29), [NM-25](https://github.com/dp-tech021/nutri-med/issues/30), [NM-26](https://github.com/dp-tech021/nutri-med/issues/31), [NM-27](https://github.com/dp-tech021/nutri-med/issues/32)
 - [ ] Quem aprova eventual custo acima de R$ 0 e quais limites de quota/pausa de projeto são aceitáveis?
 - [ ] Qual ambiente de homologação e qual URL serão utilizados?
-- [ ] Como será verificado o fluxo completo com banco, contas distintas e sem skips de teste?
+- [ ] Como reproduzir em outro ambiente a [homologação local já registrada](homologacao-integrada.md), com banco, contas distintas e sem skips, e resolver as ressalvas antes do piloto?
 - [ ] Qual solução de e-mail confirma contas e recupera senhas com entrega real?
 - [ ] Quais medidas de privacidade e segurança devem bloquear o deploy se não estiverem verificadas?
 - [ ] Como será feito o rollback e o monitoramento, e quem responderá a incidentes?
@@ -56,7 +56,7 @@
 - [ ] Qual será a Definition of Done adotada no GitHub?
 
 ## Como responder
-Registrar resposta e evidência na **Issue indicada**; se houver decisão técnica/arquitetural relevante, criar ou atualizar ADR e relacionar seu PR. Alterar requisitos e interfaces somente após a decisão ser aceita. Não inventar respostas nem marcar tarefas concluídas por ter apenas gerado código. O projeto ainda depende da validação integrada para ser considerado funcional.
+Registrar resposta e evidência na **Issue indicada**; se houver decisão técnica/arquitetural relevante, criar ou atualizar ADR e relacionar seu PR. Alterar requisitos e interfaces somente após a decisão ser aceita. Não inventar respostas nem marcar tarefas concluídas por ter apenas gerado código. A homologação local registrada não substitui revisão independente da integração, critérios operacionais e autorização para produção.
 
 ## 8. Licença e direitos de uso — [NM-38](https://github.com/dp-tech021/nutri-med/issues/44)
 - [ ] O projeto será open source, privado ou apenas publicamente visível como portfólio?

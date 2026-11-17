@@ -1,0 +1,92 @@
+[
+  {
+    "width": 320,
+    "authenticated": false,
+    "home": "passed",
+    "health": "passed",
+    "catalog": "passed",
+    "keyboard": "passed",
+    "horizontalOverflow": false
+  },
+  {
+    "width": 320,
+    "authenticated": true,
+    "home": "passed",
+    "health": "passed",
+    "catalog": "passed",
+    "keyboard": "passed",
+    "horizontalOverflow": false
+  },
+  {
+    "width": 375,
+    "authenticated": false,
+    "home": "passed",
+    "health": "passed",
+    "catalog": "passed",
+    "keyboard": "passed",
+    "horizontalOverflow": false
+  },
+  {
+    "width": 375,
+    "authenticated": true,
+    "home": "passed",
+    "health": "passed",
+    "catalog": "passed",
+    "keyboard": "passed",
+    "horizontalOverflow": false
+  },
+  {
+    "width": 768,
+    "authenticated": false,
+    "home": "passed",
+    "health": "passed",
+    "catalog": "passed",
+    "keyboard": "passed",
+    "horizontalOverflow": false
+  },
+  {
+    "width": 768,
+    "authenticated": true,
+    "home": "passed",
+    "health": "passed",
+    "catalog": "passed",
+    "keyboard": "passed",
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1024,
+    "authenticated": false,
+    "home": "passed",
+    "health": "passed",
+    "catalog": "passed",
+    "keyboard": "passed",
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1024,
+    "authenticated": true,
+    "home": "passed",
+    "health": "passed",
+    "catalog": "passed",
+    "keyboard": "passed",
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1440,
+    "authenticated": false,
+    "home": "passed",
+    "health": "passed",
+    "catalog": "passed",
+    "keyboard": "passed",
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1440,
+    "authenticated": true,
+    "home": "passed",
+    "health": "passed",
+    "catalog": "passed",
+    "keyboard": "passed",
+    "horizontalOverflow": false
+  }
+]

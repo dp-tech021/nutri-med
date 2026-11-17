@@ -18,11 +18,11 @@ Descreva a necessidade e o usuário afetado.
 **Dependências:** #...
 
 ## Escopo
-- 
+-
 
 ## Critérios de aceite
-- [ ] 
-- [ ] 
+- [ ]
+- [ ]
 
 ## Como verificar
 Comandos e testes planejados, sem afirmar execução prévia.

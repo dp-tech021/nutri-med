@@ -1,87 +1,76 @@
-# Nutri-Med
+# Nutri-Med — Saúde e Serviços Gerais
 
-**Status:** MVP de marketplace **generalista de prestação de serviços** em desenvolvimento, **não validado para produção**. Repositório público: [dp-tech021/nutri-med](https://github.com/dp-tech021/nutri-med).
+O Nutri-Med é uma plataforma única com duas áreas distintas: **Saúde** e **Serviços Gerais**, compartilhando conta, autenticação e infraestrutura. Esta branch `integration/nm-mvp-saude-servicos` reúne a aplicação, backend, migrations, homologação e hardening para revisão independente. **Não está publicada nem validada para produção.**
 
-> **Posicionamento confirmado (11/11/2026):** o Nutri-Med é um **marketplace generalista de prestação de serviços**, conectando clientes e prestadores de diferentes categorias; **não é uma plataforma de saúde ou nutrição**. O nome atual pode sugerir outro segmento; eventual renomeação depende de decisão futura. A lista de categorias e as regras de elegibilidade ainda precisam de definição; não presumir serviços clínicos, coleta de dados de saúde ou verificação profissional concluída. Ver [NM-01](https://github.com/dp-tech021/nutri-med/issues/6) e [questões em aberto](docs/questoes-em-aberto.md).
+- **Saúde:** descoberta de médicos, nutricionistas, psicólogos, fisioterapeutas e outros profissionais da saúde, com profissão, especialidade informada, cidade, modalidade e perfil público.
+- **Serviços Gerais:** descoberta e contratação por orçamento de prestadores, como eletricistas, encanadores, pintores, técnicos, diaristas e outros profissionais, conforme as categorias disponíveis. Esses exemplos não adicionam categorias à taxonomia.
 
-## 1. O que é o projeto?
+A definição oficial e os limites estão em [visão do produto](docs/visao-produto.md). Decisões comerciais, elegibilidade e operação continuam nas [questões em aberto](docs/questoes-em-aberto.md).
 
-O Nutri-Med visa conectar **clientes** que procuram serviços gerais a **prestadores** de diferentes categorias que divulgam suas atividades e recebem pedidos de orçamento. A proposta do MVP é centralizar a descoberta de serviços, a negociação por proposta, o aceite de condições e o acompanhamento dos atendimentos até sua conclusão.
+## Estado atual e limites
 
-**Fluxo principal esperado:** cadastro → login → prestador publica serviço → cliente consulta catálogo → solicita orçamento → prestador envia/revisa proposta → cliente aceita os termos da versão vigente → execução → finalização informada pelo prestador → confirmação do cliente.
-
-**Importante:** no MVP, **aceitar uma proposta significa registrar uma contratação no sistema; NÃO significa pagamento**.
-
-### Perfis de usuário
-| Perfil | Objetivo | Principais operações |
+| Área | Implementado | Limites |
 | --- | --- | --- |
-| Visitante | Conhecer a plataforma e pesquisar serviços | Catálogo, filtros, detalhes, perfis públicos, acesso a login/cadastro |
-| Cliente | Encontrar profissionais e contratar serviços | Cadastro, orçamento, consulta/aceite/recusa de proposta, histórico, confirmação de conclusão |
-| Prestador | Divulgar serviços e administrar solicitações | Perfil público, anúncios, propostas/revisões, acompanhamento e finalização informada |
+| Saúde | Catálogo por domínio, profissão/especialidade, filtros, perfil público e painel profissional para atributos e modalidade das ofertas existentes | Cadastro inicial Saúde pela UI e solicitação administrativa bloqueados; API rejeita request Saúde com 409. Sem agenda, prontuário ou atendimento clínico na plataforma. |
+| Serviços Gerais | Catálogo, categorias, preços, perfis, anúncios, solicitação de orçamento, propostas versionadas, aceite, acompanhamento e confirmação de conclusão | Sem pagamento real; criação de solicitação não possui idempotência no servidor. |
+| Autenticação e autorização | Supabase Auth, sessões, recuperação, perfis e verificações de token/papel/propriedade na API | Entrega de e-mail por SMTP externo ainda precisa de validação; JWT emitido pode durar até expirar após logout. |
+| Banco e segurança | Migrations ordenadas, RLS/grants, limites transacionais de escrita, snapshots, histórico e contrato único por pedido | Hardening remoto exige aplicação futura autorizada; testes desta branch usam somente banco e contas sintéticas locais. |
+| Upload | Endpoint bloqueado com 501, `UPLOAD_DISABLED_PENDING_VALIDATION` | Não enviar imagens, PDFs ou dados reais; liberação depende de revisão própria. |
 
-Cada conta terá um único perfil (**cliente ou prestador**); cadastro público não cria administradores. **O MVP não possui painel administrativo**.
+Registro profissional significa somente **“Registro informado pelo profissional”**, **“Não verificado oficialmente pela plataforma”** quando exibido. Não há certificação ou habilitação oficial validada pela plataforma. A opção técnica “Atuação geral informada” não concede título de especialista.
 
-## 2. Escopo e entregáveis do MVP
-1. **Autenticação:** cadastro, login/logout, recuperação de senha, confirmação de e-mail e perfis.
-2. **Prestadores e serviços:** perfis, anúncios ativos/inativos, categorias, preços fixo/inicial/sob orçamento; imagens somente após upload seguro.
-3. **Descoberta:** catálogo público, detalhes, busca por prefixo dentro do contrato de API, filtros e paginação no servidor.
-4. **Negociação:** solicitação de orçamento, uma proposta vigente por pedido, histórico imutável de revisões, recusa/cancelamento antes do aceite.
-5. **Contratação:** aceite explícito e atômico da versão vigente, termos preservados, proteção contra duplicação.
-6. **Atendimento:** prestador inicia/informa finalização; cliente confirma conclusão; histórico de transições e controle de acesso.
-7. **Qualidade:** API, persistência, testes automatizados e integrados, autorizações no backend, documentação e revisão por PR.
-8. **Apresentação:** landing page do produto, interface responsiva e acessível (atividade planejada em [NM-05](https://github.com/dp-tech021/nutri-med/issues/10)).
+**Aceitar proposta em Serviços Gerais registra contratação; não significa pagamento.** Não há gateway, split, cobrança ou transferência reais. Não foi integrada a branch de pagamento simulado. Atendimento Saúde, prontuário, coleta de sintomas, exames e histórico clínico permanecem fora do fluxo disponível.
 
-**Fora do MVP inicial:** pagamentos bancários reais, chat, avaliações públicas, painel administrativo, notificações, agenda, cancelamento acordado após contratação. O [PR #5](https://github.com/dp-tech021/nutri-med/pull/5) contém apenas uma **tela de pagamento simulada**, sem Pix, cartão, boleto, gateway, cobrança, webhook ou transferência reais. Gateway, comissão, split, repasses e estornos são tópicos de **evolução futura**, sujeitos a decisões de negócio e custo.
+Chat, avaliações públicas, notificações, agenda e cancelamento comum após contratação continuam fora do escopo disponível.
 
-**Saídas esperadas:** interface utilizável por cliente e prestador, API autorizada, dados persistentes, registro correto das condições aceitas, estados e histórico de atendimento, instruções locais e evidências de testes. Essas saídas **ainda não foram comprovadas ponta a ponta**.
+Cada conta tem um papel (`cliente` ou `prestador`); cliente pode descobrir ambas as áreas. No MVP, prestador tem um único domínio profissional. Cadastro público não cria administradores e não há painel administrativo.
 
-## 3. Arquitetura registrada para o desenvolvimento
+## Stack efetivamente utilizada
 
-| Camada | Tecnologias no código / decisão | Observação |
-| --- | --- | --- |
-| Frontend | React, TypeScript, Vite, Tailwind CSS, React Router | Código em [PR #4](https://github.com/dp-tech021/nutri-med/pull/4) |
-| Autenticação | Supabase Auth | Cadastro e sessões; verificar recuperação real por e-mail |
-| Backend | Supabase Edge Functions (TypeScript/Deno) | API para regras de negócio e autorização no servidor |
-| Persistência | PostgreSQL do Supabase, migrations SQL e RLS | Bloquear acesso direto do navegador a dados de negócio |
-| Imagens | Supabase Storage (planejado) | Upload desativado até validação de conteúdo e autorização |
-| Hospedagem frontend | Cloudflare Pages Free (candidata) | Sem publicação em produção autorizada |
-| Ambiente local | Node.js/npm, Supabase CLI e motor de contêiner (Docker ou compatível) | Testes de banco e API são obrigatórios |
-| Versionamento | Git, GitHub Issues, Pull Requests e GitHub Actions | Revisão cruzada pelos dois desenvolvedores |
-
-A arquitetura de referência inicial sugeria Firebase. O [PR #3](https://github.com/dp-tech021/nutri-med/pull/3) registra a escolha posterior de Supabase para viabilizar a API sem habilitar faturamento no desenvolvimento. **Não implementar dois backends nem migrar por impulso.**
-
-**Custos:** frontend e ferramentas de desenvolvimento podem ser utilizados sem licença paga; Supabase Free, Cloudflare Pages Free e GitHub Free têm **quotas e limitações**. Gratuidade no protótipo não garante operação comercial 24/7 nem domínio, SMTP e pagamentos sem custo. Ver documentação oficial e confirmar limites no momento do deploy: [Supabase](https://supabase.com/docs/guides/platform/billing-on-supabase), [Cloudflare Pages](https://developers.cloudflare.com/pages/platform/limits/) e [GitHub](https://docs.github.com/). **Orçamento operacional autorizado: R$ 0. Não ativar cobrança sem autorização expressa.**
-
-## 4. Estado real do repositório (10/11/2026)
-
-| Local | Conteúdo e situação |
+| Camada | Tecnologia |
 | --- | --- |
-| `main` | Branch principal ainda sem a aplicação completa; contém inicialização do repositório |
-| [PR #2](https://github.com/dp-tech021/nutri-med/pull/2) | Diretrizes, preparação e escopo — pendente de revisão/integração |
-| [PR #3](https://github.com/dp-tech021/nutri-med/pull/3) | Arquitetura, decisão tecnológica e custos — pendente |
-| [PR #4](https://github.com/dp-tech021/nutri-med/pull/4) | MVP codificado em branch; **QA integrado de Supabase/SQL não foi comprovado** |
-| [PR #5](https://github.com/dp-tech021/nutri-med/pull/5) | Pagamento **somente simulado**; depende do PR #4 |
-| [PR #38](https://github.com/dp-tech021/nutri-med/pull/38) | Histórico da organização inicial: backlog, responsáveis, templates e README |
+| Frontend | React 19, TypeScript, Vite 7, Tailwind CSS 4, React Router 7 |
+| Backend | Supabase Edge Functions, TypeScript/Deno, API `supabase/functions/api/index.ts` |
+| Auth e banco | Supabase Auth, PostgreSQL, migrations SQL, RLS/grants e funções transacionais |
+| Ambiente e testes | Node.js 24 LTS, npm 11, Supabase CLI 2.122.1, Docker, Node test runner, Vitest, Testing Library e Playwright |
+| Colaboração e CI | Git, GitHub Issues, revisão cruzada e GitHub Actions |
 
-**O que está codificado no PR #4:** catálogo, login/cadastro, telas de cliente/prestador, serviços, pedidos, propostas, aceite, conclusão, API, migrations e testes. **O que falta validar:** migrations em banco real/local, isolamento de contas, filtros/paginação, concorrência de aceite, e-mail/SMTP, acessibilidade, carga e uploads. A CI não substitui testes integrados; o teste integrado pode ser ignorado sem chaves **locais** de teste. Há pendência de `package-lock.json` na branch de desenvolvimento. Não declarar pronto para produção.
+Dependências diretas e lockfile estão fixados; o SDK da Edge Function usa `npm:@supabase/supabase-js@2.119.0`. Não há backend Firebase ativo. Supabase Storage/upload e hospedagem de produção não são funcionalidades habilitadas nesta entrega. A escolha histórica de arquitetura está registrada no [PR #3](https://github.com/dp-tech021/nutri-med/pull/3).
 
-## 5. Como executar o MVP localmente (branch de desenvolvimento)
+## Execução local
 
-**Pré-requisitos:** Git, Node.js compatível com o projeto, npm, Supabase CLI e Docker/motor de contêiner disponível. Estes comandos são **instruções**, não evidências de execução bem-sucedida.
+Pré-requisitos: Git, Node.js 24 LTS, npm 11 e, para banco/API, Docker disponível. `.nvmrc` registra Node 24. Não ativar faturamento nem usar banco remoto para testes.
 
 ```bash
 git clone https://github.com/dp-tech021/nutri-med.git
 cd nutri-med
 git fetch origin
-git switch feat/mvp-plataforma-servicos
-npm install
-npx supabase start
+git checkout integration/nm-mvp-saude-servicos
+npm ci
+npm run dev
+```
+
+O Vite informa a URL local, normalmente `http://127.0.0.1:5173`. Sem API/banco, a interface abre, mas as jornadas de catálogo, login e persistência não funcionam.
+
+Verificações frontend:
+
+```bash
+npm run typecheck
+npm test
+npm run lint
+npm run build
+```
+
+Para executar a stack local, a partir da mesma pasta:
+
+```bash
+npm run db:start
 npx supabase status
 ```
 
-Copie `.env.example` para `.env.local` **localmente** e substitua **apenas as chaves públicas locais** usando a saída de `npx supabase status`. O frontend utiliza `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e `VITE_API_URL`. **Nunca inserir chave `service_role`, segredo de banco, token ou dado pessoal real em variáveis `VITE_`**, arquivos versionados, mensagens de IA ou screenshots.
+Copie `.env.example` para `.env.local` e configure somente as variáveis públicas locais `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e `VITE_API_URL`. **Nunca inserir secret/service_role, senha de banco ou token administrativo em variáveis `VITE_`, arquivos versionados, chat ou screenshots.** Não publicar a saída de status com chaves.
 
-Em dois terminais separados na mesma pasta:
+Em dois terminais separados:
 
 ```bash
 npm run api:serve
@@ -91,65 +80,53 @@ npm run api:serve
 npm run dev
 ```
 
-Abrir a URL exibida pelo Vite. O servidor local e as portas são definidos pelo ambiente/CLI. Não expor a API local à internet.
+A API usa `verify_jwt=false` porque há rotas públicas; **cada rota privada verifica o token via Supabase Auth**, além de perfil, domínio e propriedade no servidor. Não expor a stack local à internet.
 
-### Verificação obrigatória
+`ALLOWED_ORIGINS` na Edge Function é a fonte de verdade do CORS. Se o Kong da CLI local sobrescrever os headers, a adaptação opcional `python scripts/configure-local-cors.py` remove somente essa interferência. Esse script não é requisito de produção, não configura o ambiente gerenciado e não substitui a política da função. Python/PyYAML são ferramentas locais opcionais.
+
+Testes integrados, exclusivamente contra a stack local:
+
 ```bash
-npm run typecheck
-npm test
-npm run build
-npx supabase db reset
+node scripts/test-security-migration.mjs
+node scripts/test-domain-migration.mjs
+node scripts/audit-local-database.mjs
+node scripts/run-local-homologation.mjs --all
 ```
 
-O teste integrado adicional está definido em `npm run test:integration`, **somente para Supabase local**, com `TEST_SUPABASE_URL`, `TEST_SUPABASE_ANON_KEY` e `TEST_SUPABASE_SERVICE_ROLE_KEY` locais. Não executar contra ambientes remotos nem publicar essas credenciais. A verificação integrada ainda está **pendente** e será responsabilidade do backend com revisão de segurança.
+O runner carrega as chaves do status local para o processo filho, sem imprimi-las. `npm test` sem essas chaves declara os testes HTTP ignorados; isso não prova integração aprovada. `npm run test:integration` continua disponível para os cenários integrados originais. `npm run db:reset` recria destrutivamente o banco **local**; use somente para fixtures sintéticas.
 
-## 6. Time, responsabilidades e revisão
+Problemas de proxy, CA, DNS, espaço Docker ou healthcheck e a preparação legítima do cache npm estão documentados na seção [Hardening pré-integração](docs/homologacao-integrada.md#hardening-pré-integração). O entrypoint original foi homologado sem bundle ou configuração alternativa.
+
+## Evidências e pendências
+
+A origem validada `32c6a48` teve 96 testes aprovados, sem skips, além de migrations limpas, legado, autorização, concorrência de aceite e CORS locais. Os resultados específicos após integrar a main ficam em [homologação integrada](docs/homologacao-integrada.md). Histórico útil também está em [catálogo por domínio](docs/catalogo-dominios.md), [painéis e solicitações](docs/solicitacoes-paineis-dominios.md) e [taxonomia Saúde](docs/revisao-taxonomia-saude.md).
+
+Persistem: avaliação comercial/legal e privacidade antes de dados reais; SMTP externo; testes de carga; revisão manual de acessibilidade; idempotência de criação de solicitações no servidor; aviso de bundle de aproximadamente 563 kB. A migration `20261117162451_revoke_rls_auto_enable_public_execute.sql` está preparada e testada localmente, **não aplicada ao Supabase remoto por estas etapas**. Publicação e migração remota precisam de autorização separada.
+
+## Time, responsabilidades e revisão
 
 | Conta GitHub | Responsabilidade principal |
 | --- | --- |
-| [@Id-UserDanilo](https://github.com/Id-UserDanilo) | **Frontend**: landing page, React, formulários, UX, acessibilidade, configurações de segurança do frontend e coordenação da revisão de segurança |
-| [@o-tedd](https://github.com/o-tedd) | **Backend**: API, banco PostgreSQL, migrations, autenticação/autorização no servidor, RLS, integrações, transações e testes integrados |
-| Ambos | Definição de produto, decisões de custo/regulação, revisão cruzada e aprovação de entregas |
+| [@Id-UserDanilo](https://github.com/Id-UserDanilo) | Frontend, landing, React, formulários, UX, acessibilidade, configurações de segurança frontend e coordenação da revisão de segurança |
+| [@o-tedd](https://github.com/o-tedd) | Backend, API, PostgreSQL, migrations, autenticação/autorização no servidor, RLS, integrações, transações e testes integrados |
+| Ambos | Produto, decisões de custo/regulação, revisão cruzada e aprovação das entregas |
 
-**Regra de segurança:** a interface pode ocultar controles, mas apenas o backend pode **autorizar** acesso ou alterar transações. Segredos administrativos ficam exclusivamente no servidor.
+A UI indica estados; somente o backend autoriza acesso e transações. Segredos administrativos permanecem no servidor.
 
-**Processo:** Issue → branch pequena → implementação e testes → Pull Request → revisão cruzada → autorização de merge → atualização da Issue. Não fazer merge, deploy de produção nem habilitar faturamento sem autorização explícita.
+Fluxo de colaboração: Issue → branch → implementação/testes → revisão cruzada → autorização de merge → atualização da Issue. O [processo da dupla](docs/processo-colaboracao.md) preserva os critérios de Ready/Done e o fluxo de PRs para etapas de revisão autorizadas. **Esta preparação termina com a branch publicada, sem criar PR nem fazer merge na main.** Nenhuma Issue foi fechada automaticamente.
 
-## 7. Backlog, fases e decisões pendentes
-
+- [Backlog, fases e 38 Issues registradas](docs/backlog.md)
+- [Questões comerciais, operacionais e licença](docs/questoes-em-aberto.md)
 - [Todas as Issues](https://github.com/dp-tech021/nutri-med/issues)
-- [Backlog e roadmap detalhado](docs/backlog.md)
-- [Questões de produto e operação ainda sem resposta](docs/questoes-em-aberto.md)
-- [Processo de colaboração](docs/processo-colaboracao.md)
-- [Tarefas de Id-UserDanilo](https://github.com/dp-tech021/nutri-med/issues?q=is%3Aissue+assignee%3AId-UserDanilo)
-- [Tarefas de o-tedd](https://github.com/dp-tech021/nutri-med/issues?q=is%3Aissue+assignee%3Ao-tedd)
+- [Issues de Id-UserDanilo](https://github.com/dp-tech021/nutri-med/issues?q=is%3Aissue+assignee%3AId-UserDanilo)
+- [Issues de o-tedd](https://github.com/dp-tech021/nutri-med/issues?q=is%3Aissue+assignee%3Ao-tedd)
 
-| Fase | Resultado esperado |
-| --- | --- |
-| **F1 — Fundação** | Produto e segmentos definidos, documentação, estrutura, landing page e ambiente reproduzível |
-| **F2 — Plataforma** | Auth, perfis, serviços, catálogo e solicitações integradas |
-| **F3 — Contratação e QA** | Propostas, aceite, execução, conclusão, testes reais e homologação |
-| **F4 — Futuro financeiro** | Checkout simulado (opcional) e, sob novas autorizações, gateway e repasses reais |
+Fases preservadas: F1 fundação/documentação; F2 plataforma; F3 contratação e qualidade; F4 evolução financeira futura, dependente de autorização. Decisões de categorias comerciais, regiões, critérios de elegibilidade, verificação oficial, monetização, suporte, disputas, métricas e licença continuam nas Issues. A decisão Saúde + Serviços Gerais não encerra NM-01.
 
-**Decisões que ainda bloqueiam planejamento comercial:** categorias permitidas e elegibilidade/verificação de prestadores, tipos de cliente/prestador atendidos no piloto, modelo de receita e recebedor, responsabilidades de suporte/disputas, limites operacionais, critérios de sucesso e tratamento de dados pessoais. O posicionamento como marketplace generalista está definido; detalhes de público inicial e categorias ainda precisam ser aprovados. Todas estão registradas em Issues e no documento de questões em aberto.
+## Histórico administrativo e custos
 
-## 8. Segurança, privacidade e definição de pronto
+Os PRs [#2](https://github.com/dp-tech021/nutri-med/pull/2) (escopo), [#3](https://github.com/dp-tech021/nutri-med/pull/3) (arquitetura), [#4](https://github.com/dp-tech021/nutri-med/pull/4) (primeira implementação) e [#38](https://github.com/dp-tech021/nutri-med/pull/38) (organização, backlog e templates) são referências históricas; não se presume seu status atual. A entrega das duas áreas foi evoluída após o [PR #56](https://github.com/dp-tech021/nutri-med/pull/56). O [PR #5](https://github.com/dp-tech021/nutri-med/pull/5) é referência histórica de pagamento simulado, não integrado nesta branch e sem cobrança real.
 
-- Usar contas e dados **sintéticos** em QA. Testes não dispensam a LGPD quando houver dados pessoais reais.
-- Bloquear acesso direto do navegador às tabelas de negócio; autenticar/autorizar no backend.
-- Testar alterações de IDs, papéis, preços, versões antigas, operações simultâneas e contratos duplicados.
-- Verificar uploads e arquivos antes de publicá-los; manter upload desativado até aprovação técnica.
-- Proteger senhas/tokens/chaves e revisar logs, erros e dependências.
-- **Pronto** significa funcionalidade testada, documentada, revisada, integrada e com critérios de aceite atendidos — não apenas código gerado por IA.
+**Orçamento autorizado: R$ 0.** Supabase Free, GitHub Free e eventual hospedagem gratuita têm quotas; disponibilidade, SMTP, domínio e operação comercial não são garantidos sem custo. Não ativar billing, deploy ou recursos pagos sem autorização expressa. Consultar os limites oficiais de [Supabase](https://supabase.com/docs/guides/platform/billing-on-supabase) e [GitHub](https://docs.github.com/) antes de qualquer decisão futura. Cloudflare Pages Free foi uma candidata histórica de hospedagem, sem deploy; os [limites oficiais](https://developers.cloudflare.com/pages/platform/limits/) devem ser reavaliados em eventual decisão futura. Não há hospedagem de produção definida por esta preparação.
 
-### Links de especificação (em branches de desenvolvimento/revisão)
-- [Escopo original resumido (PR #2)](https://github.com/dp-tech021/nutri-med/blob/chore/preparacao-inicial-mvp/docs/escopo-mvp.md)
-- [Arquitetura detalhada (PR #3)](https://github.com/dp-tech021/nutri-med/blob/docs/arquitetura-mvp-custo-zero/docs/arquitetura-mvp.md)
-- [QA pendente (PR #4)](https://github.com/dp-tech021/nutri-med/blob/feat/mvp-plataforma-servicos/docs/qa-pendente.md)
-- [Limites do pagamento simulado (PR #5)](https://github.com/dp-tech021/nutri-med/blob/feat/tela-pagamento-simulado/docs/pagamento-simulado.md)
-
-## 9. Licença
-
-**Licença do código ainda não definida**. Um repositório público no GitHub não concede, por si só, permissão geral para copiar, redistribuir ou utilizar o código fora das condições legais aplicáveis. A dupla deve decidir e registrar uma licença antes de distribuir o projeto. Ver [NM-38](https://github.com/dp-tech021/nutri-med/issues/44) quando cadastrada.
-
-**Não coletar dados pessoais sensíveis, incluindo informações de saúde, nem lançar cobranças ou publicar produção antes das decisões, testes e autorizações necessários.**
+**Licença ainda não definida.** Um repositório público não concede automaticamente permissão geral de copiar ou redistribuir. Os colaboradores devem decidir direitos e licença na [NM-38](https://github.com/dp-tech021/nutri-med/issues/44).

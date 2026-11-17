@@ -1,0 +1,202 @@
+[
+  {
+    "width": 320,
+    "role": "visitor",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 320,
+    "role": "client",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 320,
+    "role": "services-provider",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 320,
+    "role": "health-provider",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 320,
+    "role": "third",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 375,
+    "role": "visitor",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 375,
+    "role": "client",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 375,
+    "role": "services-provider",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 375,
+    "role": "health-provider",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 375,
+    "role": "third",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 768,
+    "role": "visitor",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 768,
+    "role": "client",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 768,
+    "role": "services-provider",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 768,
+    "role": "health-provider",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 768,
+    "role": "third",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1024,
+    "role": "visitor",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1024,
+    "role": "client",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1024,
+    "role": "services-provider",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1024,
+    "role": "health-provider",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1024,
+    "role": "third",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1440,
+    "role": "visitor",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1440,
+    "role": "client",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1440,
+    "role": "services-provider",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1440,
+    "role": "health-provider",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  },
+  {
+    "width": 1440,
+    "role": "third",
+    "status": "passed",
+    "healthSubmission": "blocked-by-contract",
+    "clinicalFields": 0,
+    "horizontalOverflow": false
+  }
+]
