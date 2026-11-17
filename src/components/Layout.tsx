@@ -48,7 +48,8 @@ export function Layout({ children }: { children: ReactNode }) {
         </button>
         <div id="main-menu" className={`main-menu ${menuOpen ? 'main-menu--open' : ''}`}>
           <Link ref={firstMenuLinkRef} to="/">Início</Link>
-          <Link to="/servicos">Explorar serviços</Link>
+          <Link to="/saude">Saúde</Link>
+          <Link to="/servicos">Serviços</Link>
           <Link to="/#como-funciona">Como funciona</Link>
           {session ? <>
             <Link to="/dashboard">Painel</Link>
@@ -65,10 +66,11 @@ export function Layout({ children }: { children: ReactNode }) {
     <footer className="site-footer"><Container className="footer-content">
       <div>
         <Link className="brand brand--footer" to="/" aria-label="Nutri-Med, página inicial"><span className="brand-mark" aria-hidden="true">N</span><span>Nutri-Med</span></Link>
-        <p>Protótipo de marketplace para solicitação de orçamentos. A plataforma não processa pagamentos.</p>
+        <p>Plataforma de saúde e serviços gerais. A plataforma não processa pagamentos.</p>
       </div>
       <nav aria-label="Navegação do rodapé">
-        <Link to="/servicos">Explorar serviços</Link>
+        <Link to="/saude">Saúde</Link>
+          <Link to="/servicos">Serviços</Link>
         <Link to="/#como-funciona">Como funciona</Link>
         {session ? <Link to="/dashboard">Painel</Link> : <>
           <Link to="/login">Entrar</Link>
