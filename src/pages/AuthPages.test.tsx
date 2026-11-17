@@ -3,10 +3,10 @@ import userEvent from '@testing-library/user-event';
 import type { Session } from '@supabase/supabase-js';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AppContext, type AppContextValue } from '../app/AppContext';
 import { registrationDraftKey } from '../auth/registrationDraft';
-import { AuthPage, ResetPasswordPage, authErrorMessage, safeInternalPath } from './AuthPages';
+import { AuthPage, ResetPasswordPage, authCallback, authErrorMessage, safeInternalPath } from './AuthPages';
 
 const authMocks = vi.hoisted(() => ({
   signUp: vi.fn(),
@@ -27,9 +27,43 @@ function renderAuth(page: ReactNode, value: AppContextValue = context, initialEn
 }
 
 describe('autenticação', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
   beforeEach(() => {
     sessionStorage.clear();
     vi.clearAllMocks();
+  });
+
+  it.each([
+    ['https://example.test', '/', '/login', 'https://example.test/login'],
+    ['https://example.test', '/', '/atualizar-senha', 'https://example.test/atualizar-senha'],
+    ['https://dp-tech021.github.io', '/nutri-med/', '/login', 'https://dp-tech021.github.io/nutri-med/login'],
+    ['https://dp-tech021.github.io', '/nutri-med/', '/atualizar-senha', 'https://dp-tech021.github.io/nutri-med/atualizar-senha'],
+  ] as const)('compõe callback %s + %s + %s', (origin, base, path, expected) => {
+    expect(authCallback(path, base, origin)).toBe(expected);
+  });
+
+  it.each(['/', '/nutri-med/'])('envia callbacks com BASE_URL=%s nas duas operações Auth', async (base) => {
+    vi.stubEnv('BASE_URL', base);
+    authMocks.signUp.mockResolvedValue({ data: { user: { id: 'callback-demo' }, session: null }, error: null });
+    authMocks.resetPasswordForEmail.mockResolvedValue({ data: {}, error: null });
+    const user = userEvent.setup();
+    const signup = renderAuth(<AuthPage mode="cadastro" />);
+    await user.type(screen.getByLabelText(/^Nome de exibição/), 'Pessoa Demo');
+    await user.type(screen.getByLabelText(/^E-mail/), 'pessoa@example.invalid');
+    await user.type(screen.getByLabelText(/^Senha/), 'Senha-demo-123');
+    await user.type(screen.getByLabelText(/^Confirme a senha/), 'Senha-demo-123');
+    await user.click(screen.getByRole('button', { name: 'Criar conta' }));
+    expect(authMocks.signUp).toHaveBeenCalledWith(expect.objectContaining({
+      options: { emailRedirectTo: `${window.location.origin}${base}login` },
+    }));
+    signup.unmount();
+    renderAuth(<AuthPage mode="recuperar" />);
+    await user.type(screen.getByLabelText(/^E-mail/), 'pessoa@example.invalid');
+    await user.click(screen.getByRole('button', { name: 'Enviar instruções' }));
+    expect(authMocks.resetPasswordForEmail).toHaveBeenCalledWith('pessoa@example.invalid', {
+      redirectTo: `${window.location.origin}${base}atualizar-senha`,
+    });
   });
 
   it('preserva a escolha de prestador iniciada pela landing', () => {

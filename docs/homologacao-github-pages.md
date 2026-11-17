@@ -54,10 +54,12 @@ do environment precisam estar prontas antes da publicação. O CI sem stack Supa
 pode deixar os testes HTTP condicionais sem execução; os testes de interface continuam ativos.
 O aviso existente de bundle acima de 500 kB permanece.
 
-Os callbacks de confirmação de cadastro/recuperação existentes ainda usam caminhos na raiz
-da origem (/login e /atualizar-senha). Estes fluxos por e-mail não estão homologados sob o
-subdiretório do Pages e exigem revisão própria dos callbacks e da allowlist Auth antes do uso.
-Auth e suas regras não foram modificados nesta etapa de hospedagem.
+Os callbacks de confirmação de cadastro e recuperação respeitam `BASE_URL` e foram
+testados para `/` e `/nutri-med/`. A allowlist de Redirect URLs do Supabase precisa aceitar
+`https://dp-tech021.github.io/nutri-med/login` e
+`https://dp-tech021.github.io/nutri-med/atualizar-senha` antes da homologação real por e-mail.
+Essa configuração não foi aplicada remotamente nesta tarefa. As rotas internas continuam
+sem prefixo manual; o BrowserRouter cuida da base.
 
 ## Validação local desta preparação
 
@@ -81,3 +83,15 @@ O harness inicial usava formato incorreto para categories/taxonomy; corrigido o 
 todas as verificações passaram sem alteração do produto.
 index.html e 404.html são idênticos, com JS/CSS sob /nutri-med/assets/.
 Não foram adicionados testes permanentes, dependências ou mudanças no produto.
+
+### Correção posterior dos callbacks Auth
+
+Partindo do SHA `e436066c3c79f4d9e5282844e997fe1adf2792ed`, a composição dos callbacks
+passou a usar a base do Vite, sem prefixo fixo nem alteração das rotas internas.
+Seis testes novos verificam quatro URLs absolutas e as opções enviadas a signUp e
+resetPasswordForEmail nas duas bases, usando mocks sem contato com Supabase remoto.
+Instalação com o cache local acima, typecheck, lint e ambos os builds aprovados.
+npm test: 96 Vitest e 10 Node aprovados; quatro testes HTTP condicionais sem execução.
+Após o build Pages, `cp dist/index.html dist/404.html` foi executado; os arquivos são
+idênticos e os assets JS/CSS usam `/nutri-med/assets/`.
+Publicação online e entrega real de e-mail continuam sem homologação nesta tarefa.
