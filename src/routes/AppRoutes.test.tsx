@@ -81,3 +81,15 @@ describe('áreas do marketplace', () => {
     },
   );
 });
+
+it.each(['/novo-servico','/editar-servico/demo','/meus-servicos','/solicitacoes-recebidas','/propostas'])(
+  'perfil Saúde não entra no fluxo comercial de Serviços em %s',async(path)=>{
+    const session={user:{id:'health-qa'},access_token:'synthetic'} as Session;
+    const profile={kind:'prestador' as const,domain:'health' as const,display_name:'Profissional QA',city:'Cidade QA',category:'',about:'',profession:'prof-qa',specialty:'esp-qa'};
+    apiMock.mockImplementation(async(url)=>url==='/me'?profile:url==='/health-taxonomy'?{professions:[],specialties:[]}:[]);
+    render(<AppContext.Provider value={{session,profile,refresh:async()=>undefined}}><MemoryRouter initialEntries={[path]}><AppRoutes/><LocationSnapshot/></MemoryRouter></AppContext.Provider>);
+    expect(await screen.findByRole('heading',{name:'Painel de Saúde'})).toBeVisible();
+    expect(screen.getByLabelText('localização')).toHaveTextContent('"pathname":"/dashboard"');
+    expect(screen.queryByRole('link',{name:'Propostas'})).not.toBeInTheDocument();
+  },
+);

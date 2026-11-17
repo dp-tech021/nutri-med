@@ -48,6 +48,7 @@ export function ClientRequestsPage() {
       <div><p className="eyebrow">Orçamentos</p><h1>Minhas solicitações</h1><p>Acompanhe propostas e mudanças de estado. Uma solicitação ainda não representa contratação ou pagamento.</p></div>
       <LinkButton to="/servicos">Explorar serviços</LinkButton>
     </div>
+    <Alert title="Serviços Gerais">Este histórico reúne pedidos de orçamento de Serviços Gerais. O envio administrativo de Saúde ainda não está disponível. <Link to="/saude">Conhecer Saúde</Link></Alert>
     {errorStatus === 401
       ? <Alert variant="error" title="Sessão encerrada"><p>{error}</p><Link to="/login" state={{ from: '/minhas-solicitacoes' }}>Entrar novamente</Link></Alert>
       : error && <ErrorState description={error} onRetry={() => void load()} />}

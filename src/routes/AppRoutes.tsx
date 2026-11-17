@@ -49,19 +49,19 @@ export function AppRoutes() {
     <Route path="/dashboard" element={dashboard} />
     <Route path="/novo-servico" element={!session
       ? loginRedirect
-      : profile?.kind !== 'prestador' ? <Navigate to="/dashboard" replace /> : <NewServicePage />} />
+      : profile?.kind !== 'prestador' || profile.domain === 'health' ? <Navigate to="/dashboard" replace /> : <NewServicePage />} />
     <Route path="/editar-servico/:id" element={!session
       ? loginRedirect
-      : profile?.kind !== 'prestador' ? <Navigate to="/dashboard" replace /> : <EditServicePage />} />
+      : profile?.kind !== 'prestador' || profile.domain === 'health' ? <Navigate to="/dashboard" replace /> : <EditServicePage />} />
     <Route path="/meus-servicos" element={!session
       ? loginRedirect
-      : profile?.kind !== 'prestador' ? <Navigate to="/dashboard" replace /> : <MyServicesPage />} />
+      : profile?.kind !== 'prestador' || profile.domain === 'health' ? <Navigate to="/dashboard" replace /> : <MyServicesPage />} />
     <Route path="/solicitacoes-recebidas" element={!session
       ? loginRedirect
-      : profile?.kind !== 'prestador' ? <Navigate to="/dashboard" replace /> : <ReceivedRequestsPage />} />
+      : profile?.kind !== 'prestador' || profile.domain === 'health' ? <Navigate to="/dashboard" replace /> : <ReceivedRequestsPage />} />
     <Route path="/propostas" element={!session
       ? loginRedirect
-      : profile?.kind !== 'prestador' ? <Navigate to="/dashboard" replace /> : <ProviderProposalsPage />} />
+      : profile?.kind !== 'prestador' || profile.domain === 'health' ? <Navigate to="/dashboard" replace /> : <ProviderProposalsPage />} />
     <Route path="/minhas-solicitacoes" element={!session
       ? loginRedirect
       : profileError

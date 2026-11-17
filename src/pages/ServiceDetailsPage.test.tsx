@@ -88,11 +88,12 @@ describe('solicitação de orçamento', () => {
   });
 });
 
-it('detalhe de Saúde preserva o link público mas não oferece coleta de necessidade clínica',async()=>{
+it.each(['visitante','cliente','prestador','terceiro'])('Saúde sem campo clínico para %s, preservando link público',async(actor)=>{
   apiMock.mockResolvedValue({...details,service:{...details.service,domain:'health',profession:'profissao-qa',specialty:'especialidade-qa'}});
-  renderPage();
-  expect(await screen.findByRole('heading',{name:'Descoberta de profissionais'})).toBeVisible();
+  renderPage(actor==='visitante' ? {...context,session:null,profile:null} : {...context,session:{...context.session!,user:{...context.session!.user,id:actor}} as Session,profile:{...context.profile!,kind:actor==='prestador'?'prestador':'cliente'}});
+  expect(await screen.findByRole('heading',{name:'Solicitar atendimento'})).toBeVisible();
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  expect(screen.getByRole('button',{name:'Solicitar atendimento'})).toBeDisabled();
   expect(screen.queryByRole('button',{name:'Enviar solicitação de orçamento'})).not.toBeInTheDocument();
   expect(screen.getByRole('link',{name:'Ver perfil e outros serviços'})).toHaveAttribute('href','/prestador/provider-demo');
 });

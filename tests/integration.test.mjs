@@ -114,7 +114,7 @@ test('domínios reais: catálogo, filtros, cursores, legado, perfis e projeçõe
   const health=await makeUser('Saude Sintetica','prestador',{domain:'health',category:'',profession,specialty:'especialidade-qa',registration_council:'CONSELHO-QA',registration_number:'PRIVADO-QA',registration_jurisdiction:'TESTE',registration_public:false});
   const legacy=await makeUser('Legado Sintetico','prestador');
   const client=await makeUser('Cliente Dominios','cliente');
-  const base={title:'Descoberta sintética QA',description:'Anúncio exclusivamente sintético de teste.',category:'outros',city:'Cidade QA',modality:'online',price_type:'orcamento',price_cents:null};
+  const base={title:'Descoberta sintética QA',description:'Anúncio exclusivamente sintético de teste.',category:'outros',city:`Cidade QA ${prefix}`,modality:'online',price_type:'orcamento',price_cents:null};
   const posted=[];
   for(let i=0;i<3;i++){
     const r=await request('/services',health.token,'POST',{...base,title:`Descoberta sintética QA ${i}`,domain:'health'});
@@ -123,7 +123,7 @@ test('domínios reais: catálogo, filtros, cursores, legado, perfis e projeçõe
   // Omit domain to exercise the pre-existing write contract.
   const old=await request('/services',legacy.token,'POST',{...base,title:'Descoberta sintética QA legado',category:'limpeza'});
   assert.equal(old.status,201,JSON.stringify(old.data));assert.equal(old.data.domain,'services');
-  const filter=`q=descoberta&city=Cidade+QA&modality=online&limit=1`;
+  const filter=`q=descoberta&city=${encodeURIComponent(base.city)}&modality=online&limit=1`;
   let cursor;const seen=[];
   do {
     const page=await request('/catalog?domain=health&profession='+profession+'&specialty=especialidade-qa&'+filter+(cursor?'&cursor='+encodeURIComponent(cursor):''));
@@ -162,6 +162,17 @@ test('domínios reais: catálogo, filtros, cursores, legado, perfis e projeçõe
   assert.equal((await request('/requests',client.token,'POST',{service_id:posted[0],need:'Texto sintético sem informação clínica'})).status,409);
   assert.equal((await request('/services',health.token,'POST',{...base,domain:'services'})).status,400);
   assert.equal((await request('/services',client.token,'POST',{...base,domain:'health'})).status,403);
+  // Validated administrative profile/offer edits: never pass domain from the browser.
+  assert.equal((await request('/requests')).status,401);
+  const modalities=await request('/services/'+posted[0],health.token,'PATCH',{modality:'presencial'});
+  assert.equal(modalities.status,200,JSON.stringify(modalities.data));assert.equal(modalities.data.domain,'health');
+  assert.equal((await request('/services/'+posted[0],legacy.token,'PATCH',{modality:'online'})).status,404);
+  assert.equal((await request('/services/'+posted[0],client.token,'PATCH',{modality:'online'})).status,403);
+  const editedProfile=await request('/me',health.token,'PATCH',{profession,specialty:'especialidade-qa'});
+  assert.equal(editedProfile.status,200,JSON.stringify(editedProfile.data));assert.equal(editedProfile.data.domain,'health');
+  assert.equal((await request('/me',health.token,'PATCH',{domain:'services'})).status,400);
+  assert.equal((await request('/requests',client.token,'POST',{service_id:posted[0],domain:'services',need:'Texto sintético operacional'})).status,400);
+  assert.equal((await request('/requests',client.token,'POST',{service_id:posted[0]})).status,409);
   const published=await request('/me',health.token,'PATCH',{registration_public:true});assert.equal(published.status,200,JSON.stringify(published.data));
   assert.equal((await request('/providers/'+health.uid)).data.provider.registration_reported.number,'PRIVADO-QA');
   assert.equal((await request('/me',health.token,'PATCH',{verificationStatus:'verified'})).status,400);

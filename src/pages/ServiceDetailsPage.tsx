@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError, api, servicePrice, type RequestItem, type Service } from '../api';
 import { useApp } from '../app/AppContext';
+import { HealthRequestNotice } from '../components/HealthRequestNotice';
 import { Layout } from '../components/Layout';
 import { readableLabel } from '../components/ServiceCard';
 import { Alert, Breadcrumbs, Button, Card, ConfirmationModal, ErrorState, Field, Input, LinkButton, LoadingState, StatusBadge, Textarea } from '../components/ui';
@@ -148,7 +149,7 @@ function ServiceDetailsContent({ item, profileKind, sessionActive, need, date, b
       </Card>
     </article>
 
-    {item.service.domain === 'health' ? <aside className="request-panel"><h2>Descoberta de profissionais</h2><p>Agendamento e solicitação de atendimento ainda não estão disponíveis. Não envie sintomas, exames ou informações clínicas.</p></aside> : <aside className="request-panel" aria-labelledby="request-title">
+    {item.service.domain === 'health' ? <aside className="request-panel"><HealthRequestNotice /></aside> : <aside className="request-panel" aria-labelledby="request-title">
       <h2 id="request-title">Solicitar orçamento</h2>
       <p>Descreva sua necessidade para pedir uma proposta. O envio não confirma horário, contratação ou pagamento.</p>
       {profileKind === 'prestador'
