@@ -114,3 +114,7 @@ A Home distingue Saúde de Serviços Gerais e preserva `/servicos`, conta, recup
 ## Catálogo por domínio — etapa incremental
 
 Ver [modelo, API, recuperação e validação local](docs/catalogo-dominios.md). A entrega anterior está registrada no PR #56; este incremento parte de `63ed0ff`. Taxonomia de Saúde sem seed comercial: não há profissionais fictícios na aplicação. Registros profissionais são declarados, sem verificação oficial.
+
+## Solicitações e painéis por domínio
+
+Na branch incremental `feat/nm-solicitacoes-paineis-por-dominio`, Serviços Gerais mantém o orçamento e histórico. O painel de Saúde edita profissão/especialidade e modalidade das ofertas existentes; **Solicitar atendimento permanece indisponível**, sem campo clínico, até existir contrato administrativo validado. Ver [comportamento, testes e bloqueios](docs/solicitacoes-paineis-dominios.md). Nenhuma das alterações significa conclusão do MVP ou agenda/atendimento habilitados.

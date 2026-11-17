@@ -113,3 +113,9 @@ As Issues **NM-33–NM-38** registram decisões de negócio e licenciamento que 
 ## Incremento de catálogo/perfis por domínio
 
 A branch `feat/nm-catalogo-perfis-por-dominio` implementa o contrato técnico de descoberta; detalhes, limites de autoria e evidências em [catálogo por domínio](catalogo-dominios.md). Permanecem pendentes aprovação da taxonomia comercial e regiões, verificação profissional oficial, formulário profissional de Saúde, atendimento/agendamento, monetização e suporte. Não encerrar NM-01 por esta implementação.
+
+## Incremento de solicitações/painéis por domínio
+
+- Painel de Saúde: editar profissão/especialidade e modalidade por endpoints já validados; manter Serviços Gerais com orçamento, propostas, histórico e preços.
+- **Bloqueio de produto/API:** solicitação administrativa de Saúde ainda não tem contrato de criação/estados/acesso. CTA indisponível, sem campos clínicos. Definir a jornada antes de habilitar; não reutilizar automaticamente propostas/contratação.
+- Ver [decisões, bloqueios e evidências](solicitacoes-paineis-dominios.md). Atendimento, agenda médica, verificação oficial e pagamentos não estão concluídos nem autorizados por esta entrega.
