@@ -1,3 +1,6 @@
+import { MemoryRouter } from 'react-router-dom';
+import { ApiError } from '../api';
+import { AppRoutes } from '../routes/AppRoutes';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import type { Session } from '@supabase/supabase-js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -57,4 +60,28 @@ describe('sessão da aplicação', () => {
     await act(async () => resolveProfile?.({ kind: 'cliente', display_name: 'Perfil antigo' }));
     expect(screen.getByText('sem sessão')).toBeVisible();
   });
+});
+
+
+it('conta Auth sem perfil acessa a conclusão do cadastro após PROFILE_REQUIRED 403', async () => {
+  const session = { user: { id: 'new-user' }, access_token: 'synthetic' } as Session;
+  mocks.getSession.mockResolvedValue({ data: { session }, error: null });
+  mocks.api.mockRejectedValue(new ApiError('PROFILE_REQUIRED', 403));
+  mocks.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
+  render(<AppProvider><MemoryRouter initialEntries={['/dashboard']}><AppRoutes /></MemoryRouter></AppProvider>);
+  expect(await screen.findByRole('heading', { name: 'Complete seu perfil' })).toBeVisible();
+  expect(screen.queryByText('Não foi possível carregar seu perfil')).not.toBeInTheDocument();
+});
+
+it.each([
+  ['FORBIDDEN', 403],
+  ['INVALID_SESSION', 401],
+])('não libera cadastro ao receber %s em vez de perfil ausente', async (message, status) => {
+  const session = { user: { id: 'existing-user' }, access_token: 'synthetic' } as Session;
+  mocks.getSession.mockResolvedValue({ data: { session }, error: null });
+  mocks.api.mockRejectedValue(new ApiError(message, status));
+  mocks.onAuthStateChange.mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } });
+  render(<AppProvider><MemoryRouter initialEntries={['/dashboard']}><AppRoutes /></MemoryRouter></AppProvider>);
+  expect(await screen.findByText('Não foi possível carregar seu perfil', { exact: true })).toBeVisible();
+  expect(screen.queryByRole('heading', { name: 'Complete seu perfil' })).not.toBeInTheDocument();
 });

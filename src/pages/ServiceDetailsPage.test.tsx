@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { api, type RequestItem } from '../api';
 import { AppContext, type AppContextValue } from '../app/AppContext';
 import { ServiceDetailsPage } from './ServiceDetailsPage';
+import { AppRoutes } from '../routes/AppRoutes';
 
 vi.mock('../api', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../api')>();
@@ -96,4 +97,34 @@ it.each(['visitante','cliente','prestador','terceiro'])('Saúde sem campo clíni
   expect(screen.getByRole('button',{name:'Solicitar atendimento'})).toBeDisabled();
   expect(screen.queryByRole('button',{name:'Enviar solicitação de orçamento'})).not.toBeInTheDocument();
   expect(screen.getByRole('link',{name:'Ver perfil e outros serviços'})).toHaveAttribute('href','/prestador/provider-demo');
+});
+
+
+it('resposta de envio da conta anterior não aparece depois de trocar de usuário', async () => {
+  let finish: ((value: RequestItem) => void) | undefined;
+  apiMock.mockReset();
+  apiMock.mockImplementation((path) => path === '/requests'
+    ? new Promise<RequestItem>((resolve) => { finish = resolve; })
+    : Promise.resolve(details));
+  const user = userEvent.setup();
+  const page = render(<AppContext.Provider value={context}><MemoryRouter initialEntries={['/servico/service-demo']}><AppRoutes /></MemoryRouter></AppContext.Provider>);
+  await user.type(await screen.findByLabelText('Descreva sua necessidade *'), created.need);
+  await user.click(screen.getByRole('button', { name: 'Enviar solicitação de orçamento' }));
+  await user.click(screen.getByRole('button', { name: 'Enviar solicitação' }));
+  const nextContext = { ...context, session: { ...context.session!, user: { ...context.session!.user, id: 'next-client' } } as Session };
+  page.rerender(<AppContext.Provider value={nextContext}><MemoryRouter initialEntries={['/servico/service-demo']}><AppRoutes /></MemoryRouter></AppContext.Provider>);
+  await screen.findByLabelText('Descreva sua necessidade *');
+  await act(async () => finish?.(created));
+  expect(screen.queryByText('Solicitação enviada', { exact: true })).not.toBeInTheDocument();
+  expect(screen.queryByText('12345678', { exact: true })).not.toBeInTheDocument();
+});
+
+it('renovação de token da mesma conta preserva o formulário em edição', async () => {
+  apiMock.mockReset().mockResolvedValue(details);
+  const user = userEvent.setup();
+  const page = render(<AppContext.Provider value={context}><MemoryRouter initialEntries={['/servico/service-demo']}><AppRoutes /></MemoryRouter></AppContext.Provider>);
+  await user.type(await screen.findByLabelText('Descreva sua necessidade *'), created.need);
+  const refreshed = { ...context, session: { ...context.session!, access_token: 'refreshed-synthetic-token' } as Session };
+  page.rerender(<AppContext.Provider value={refreshed}><MemoryRouter initialEntries={['/servico/service-demo']}><AppRoutes /></MemoryRouter></AppContext.Provider>);
+  expect(await screen.findByLabelText('Descreva sua necessidade *')).toHaveValue(created.need);
 });

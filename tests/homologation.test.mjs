@@ -28,6 +28,7 @@ test('homologação local: Auth, whitelist HTTP, CORS, grants, concorrência e s
   const {data:login,error:loginError}=await client.auth.signInWithPassword({email,password});assert.ifError(loginError);assert(login.session);
   const refreshed=await client.auth.refreshSession();assert.ifError(refreshed.error);assert(refreshed.data.session);
   const token=refreshed.data.session.access_token;
+  const missing=await expectStatus('Auth sem perfil '+name,403,'/me',token);assert.equal(missing.data.error,'PROFILE_REQUIRED');
   await expectStatus('cadastro perfil '+name,201,'/profiles',token,'POST',{kind,domain,display_name:'Homolog '+name,city:'Cidade QA',category:domain==='health'?'':'limpeza',...(domain==='health'?{profession:'medico',specialty:'atuacao-geral'}:{})});
   return {client,token,uid:signup.user.id};
  };

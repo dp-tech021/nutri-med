@@ -35,7 +35,10 @@ export function ProfileSetupPage() {
     }
   }, [session?.user.id]);
 
-  useEffect(() => () => { mounted.current = false; }, []);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -50,6 +53,7 @@ export function ProfileSetupPage() {
         category: kind === 'prestador' ? category.trim() : '',
         about: kind === 'prestador' ? about.trim() : '',
       }, session);
+      if (!mounted.current) return;
       clearRegistrationDraft(sessionStorage);
       await refresh();
     } catch (submitError) {

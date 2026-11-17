@@ -34,7 +34,8 @@ export function AppRoutes() {
       ? <Layout><ErrorState title="Não foi possível carregar seu perfil" description={profileError} onRetry={() => void refresh()} /></Layout>
       : !profile ? <ProfileSetupPage /> : <DashboardPage />;
 
-  return <Routes>
+  // Trocar de conta descarta estado privado e respostas pendentes da conta anterior.
+  return <Routes key={session?.user.id ?? 'visitor'}>
     <Route path="/" element={<HomePage />} />
     <Route path="/saude" element={<HealthPage />} />
     <Route path="/servicos" element={<CatalogPage key="services" domain="services" />} />

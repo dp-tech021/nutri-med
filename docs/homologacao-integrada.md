@@ -1,6 +1,6 @@
 # Homologação integrada — Nutri-Med
 
-> Atualização mais recente: **Preparação da integração — Saúde e Serviços Gerais**, ao final deste documento. As seções anteriores preservam a homologação e o hardening das branches de origem, com seus SHAs e limites históricos. A adaptação antiga com bundle/entrypoint temporário não foi usada no hardening nem na preparação da integração.
+> Atualização mais recente: **Revisão final do PR #57**, ao final deste documento. As seções anteriores preservam homologação, hardening e preparação da integração com seus SHAs e limites históricos. A adaptação antiga com bundle/entrypoint temporário não foi usada nas etapas posteriores.
 
 Data: 17/11/2026. Escopo: consolidação técnica, testes e documentação; nenhum recurso de produto, pagamento ou upload habilitado.
 
@@ -589,4 +589,109 @@ Riscos restantes: sonda Auth/DNS/CA do host requerem as adaptações locais docu
 
 Nenhum PR foi criado.
 Nenhum merge foi realizado na main.
+Nenhuma alteração foi aplicada ao Supabase remoto.
+
+
+## Revisão final do PR #57
+
+Data: 17/11/2026. Branch exclusiva: `integration/nm-mvp-saude-servicos`. SHA inicial: `fa44e974bcf5d857d0f665e86708a804c32a6e17`, working tree limpa e sincronizada na abertura. SHA final: commit desta seção, resolvido por `git log -1 --format=%H -- docs/homologacao-integrada.md` e informado literalmente no relatório final do chat.
+
+O PR existente é [#57](https://github.com/dp-tech021/nutri-med/pull/57), título “feat: consolidar MVP Saúde + Serviços Gerais”, base `main`. A leitura inicial confirmou **open, Draft, sem merge**, head `fa44e97` e base `900e3738f462b265daa8cc62942a9483d870b5e3`. Nenhuma configuração, base, revisão, status Draft, auto-merge ou comentário do PR foi alterado por esta revisão. Somente o push da correção na própria branch atualiza sua head.
+
+### Escopo revisado
+
+- Diff contra main, histórico de commits, marcadores de conflito e whitespace.
+- `README.md`, visão do produto, backlog e questões em aberto: duas áreas, cinco profissões iniciais de Saúde, descoberta/perfil, registro informado sem verificação oficial, limites de atendimento e operação financeira. Os recortes históricos permanecem identificados.
+- `src/routes/AppRoutes.tsx`, contexto/provider de sessão, AuthPages, ProfileSetupPage, catálogos, perfil público, painéis, anúncios, solicitações e detalhes; componentes de layout, cards, avisos Saúde, estados e confirmação.
+- `src/api.ts`, contrato compartilhado de domínio e `supabase/functions/api/index.ts`: token via Auth, papel persistido, ownership, whitelist, limites, filtros, cursor, erros e transições. O SDK permanece exato em 2.119.0.
+- Oito migrations, funções SECURITY DEFINER, revogação de EXECUTE, contratos únicos e guards de domínio. Nenhuma migration foi editada ou aplicada remotamente.
+- Scripts locais, testes de contrato/integração, CORS e `.github/workflows/ci.yml`. O workflow foi lido, não modificado.
+
+### Achados reproduzidos e correções necessárias
+
+| Achado | Evidência antes da correção | Correção |
+| --- | --- | --- |
+| Conta Auth recém-criada não consegue concluir o perfil | GET `/me` responde **403 PROFILE_REQUIRED** quando não há perfil, mas AppProvider só tratava 404 como ausência. A tela de erro substituía “Complete seu perfil”, embora Auth estivesse válido. | AppProvider reconhece exclusivamente o par 403 + PROFILE_REQUIRED, além do 404 legado. Outros 403 e sessão inválida 401 continuam como erro. A semântica e a autorização da API não foram alteradas. |
+| Formulário de perfil perde recuperação de erro em StrictMode e executa efeitos tardios após desmontagem | `main.tsx` já usa React.StrictMode; o cleanup deixava `mounted.current=false` sem rearmar o efeito. Após 400 ao salvar, mensagem e desbloqueio do botão não ocorriam. Uma resposta depois da desmontagem também podia apagar o rascunho da próxima conta e chamar refresh. | O efeito rearma a referência e o código ignora a conclusão do POST após desmontagem, antes de mexer no rascunho/refresh. Sem redesign ou novos campos. |
+| Confirmação/referência de solicitação anterior reaparece após troca de usuário | POST pendente de uma conta resolvido depois da troca de sessão preenchia novamente `createdRequest` da página pública de serviço. O teste exibiu confirmação e referência anteriores sob o contexto do próximo cliente. O backend continuava protegendo o pedido; não se constatou bypass no servidor. | A árvore de rotas é identificada pelo ID da conta e desmonta estado/respostas anteriores quando a identidade muda. Renovação de token do mesmo usuário não remonta o formulário, verificada por teste. |
+
+Esses achados estavam na versão consolidada; não se atribui sua origem ao merge documental. Os testes anteriores de HTTP criavam perfis antes de testar as jornadas e não cobriam a integração da resposta PROFILE_REQUIRED com o roteamento. A correção restaura fluxos já existentes, sem ampliar escopo.
+
+Foram adicionados **oito testes de interface**, mantendo todos os anteriores: perfil ausente; dois controles negativos (outro 403 e 401); erro/retry em StrictMode; sucesso/preservação da escolha do cadastro; resposta de formulário desmontado; resposta privada de conta anterior; preservação de formulário em refresh de token. Antes das correções, cinco asserções de regressão falharam de forma determinística. Depois, passaram. A homologação HTTP também passou a conferir 403 PROFILE_REQUIRED antes de criar cada perfil sintético.
+
+### Cadastro real no navegador
+
+Chromium com a aplicação em desenvolvimento, React.StrictMode e API/Auth/Postgres locais reais, viewport 375 px; sem mock da API. Duas contas sintéticas confirmadas pelo admin Auth local, uma cliente e uma prestadora, iniciaram sem registro em profiles.
+
+| Passo | Cliente | Prestador |
+| --- | --- | --- |
+| Login e GET `/me` sem perfil | 403 PROFILE_REQUIRED; formulário visível | Mesmo resultado |
+| Salvar nome inválido composto por espaços | 400 real; mensagem visível e botão liberado | Mesmo resultado |
+| Corrigir nome e tentar novamente | POST profiles 201 | POST profiles 201, categoria de Serviços preenchida |
+| Banco | ID, papel e nome confirmados no registro da própria conta | Mesmo resultado, papel prestador preservado |
+| Recarregar dashboard | GET `/me` 200; Minhas solicitações | GET `/me` 200; Painel do prestador |
+
+As contas foram removidas ao encerrar o roteiro, sem senhas no relatório. O roteiro temporário ajustou o seletor do campo senha para incluir o indicador de obrigatório e passou a aguardar a resposta HTTP antes de afirmar seu status. Esses ajustes do harness não mudaram o produto nem retiraram asserções. Nenhum arquivo ou log temporário foi versionado.
+
+### Contratos e segurança preservados
+
+- Todas as rotas solicitadas continuam presentes; guards de visitante, papel e Saúde são cobertos pelos testes. Carregamento, erro, vazio, links, sessão, formulário e foco continuam cobertos. Não houve alteração visual ou de CSS.
+- Saúde mantém profissão/especialidade, cidade, modalidade, perfil e registro informado, sem preço/Sob orçamento, categoria comercial na UI, proposta, contrato ou campo clínico. API e guard SQL continuam bloqueando requests Saúde. As referências a sintomas/exames/diagnóstico encontradas em componentes são avisos de não envio, não campos de coleta.
+- Serviços mantém snapshots, preço, versões, histórico, propriedade, aceite atômico e contrato único. Nenhuma nova idempotência foi introduzida: dois POSTs válidos independentes ainda podem gerar dois pedidos; essa limitação continua testada e documentada. O lock de clique duplo da solicitação não foi alterado.
+- RLS/grants/RPCs e a migration `20261117162451_revoke_rls_auto_enable_public_execute.sql` permanecem iguais. O teste local confirma revogação de EXECUTE e preservação do event trigger.
+- CORS continua controlado por `ALLOWED_ORIGINS`. Origem maliciosa recebe 403 sem ACAO, inclusive com token; origem permitida recebe origem explícita. A adaptação Python remove somente a interferência do Kong local, sem política fixa de produção.
+- Upload mantém 501 e UPLOAD_DISABLED_PENDING_VALIDATION. Nenhum pagamento, gateway, cobrança, tabela financeira ou branch histórica de pagamento foi integrado.
+- `package.json`, lockfile, API, migrations, scripts e workflow não foram modificados nesta revisão. Nenhuma versão de dependência foi atualizada.
+
+### Testes e CI
+
+Mesmas versões de Node/npm/Supabase CLI/Docker da preparação de integração. A stack limpa aplicou as oito migrations em ordem. Foram reutilizados somente perfil de proxy Docker e cache npm legítimo para executar o entrypoint original, sem bundle ou rewrite de config.toml. O healthcheck Auth do host permanece com a ressalva ambiental documentada; o funcionamento real foi verificado por HTTP e navegador.
+
+```bash
+npm ci --cache /workspace/work/nutri-med-homologacao-20261117/npm-cache
+npm run typecheck
+SUPABASE_HOME=/workspace/work/nutri-med-pr57/supabase-home node scripts/run-local-homologation.mjs --all
+npm run lint
+npm run build
+node scripts/test-security-migration.mjs
+node scripts/test-domain-migration.mjs
+node scripts/audit-local-database.mjs
+CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium SCREENSHOT_OUTPUT_DIR=/workspace/work/nutri-med-pr57/qa-marketplace node scripts/qa-marketplace.mjs
+CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium SCREENSHOT_OUTPUT_DIR=/workspace/work/nutri-med-pr57/qa-domains node scripts/qa-domain-journeys.mjs
+git diff --check
+git diff --check origin/main...HEAD
+```
+
+O runner `--all` executa **npm test** com as chaves exclusivamente locais no processo filho. Resultados:
+
+| Verificação | Resultado |
+| --- | --- |
+| npm ci | APROVADO, 268 pacotes, lockfile consistente e sem alteração |
+| Typecheck / lint / build | APROVADOS |
+| npm test com integração real | **104 aprovados: 14 Node + 90 Vitest, zero falhas e zero skips**. 20 arquivos Vitest, 57,76 s |
+| Migrations limpas | Oito aplicadas; nenhum erro SQL e nenhum arquivo alterado |
+| Migration de segurança | APROVADA: helper ausente/presente, revogação, trigger funcional e idempotência |
+| Legado | APROVADO, preservação de registros/vínculos/snapshots |
+| Auditoria SQL | APROVADA, dez tabelas com RLS/grants e RPCs restritas; 63 constraints, 22 índices, 2 triggers de linha |
+| Homologação HTTP original | APROVADA: Auth, papel persistido, domínio, whitelist, ownership, CORS, concorrência, preço/versões/snapshots, conclusão, bloqueio Saúde e upload |
+| Navegador real de cadastro | Cliente e prestador aprovados, inclusive rejeição 400/retry e persistência após refresh |
+| QA visual existente | **35 combinações aprovadas**, larguras 320, 375, 768, 1024, 1440; sem overflow horizontal ou erro JS detectado pelos roteiros; teclado/modal/painéis/perfis e bloqueios mantidos. Respostas controladas nesses dois scripts, distintas do roteiro de cadastro real |
+
+O build mantém o aviso de bundle acima de 500 kB; não foi feita refatoração para eliminar o aviso. Não se declara WCAG completa, SMTP externo ou teste de carga aprovados.
+
+O CI inicial do PR, para fa44e97, estava **success** na [execução 44148688399](https://github.com/dp-tech021/nutri-med/actions/runs/44148688399), job frontend e passos de instalação/typecheck/test/lint/build aprovados. O workflow não foi alterado. A execução disparada pelo push desta correção é conferida depois da publicação e seu resultado consta do relatório final do chat. CI frontend não substitui os testes locais de banco/API executados acima.
+
+### Revisão do diff, segredos e limites
+
+A revisão não encontrou marcadores de conflito nem erros de whitespace. A busca em arquivos versionados por chaves privadas, JWTs completos, tokens de provedor e URLs com credenciais não encontrou candidatos de alta confiança. As menções de service_role/senha/token nos arquivos revisados são código de configuração ou fixtures sintéticas; não foi identificado segredo real versionado. O único caminho .env versionado é `.env.example`, com placeholders. Não houve impressão de credenciais ou versionamento dos logs locais.
+
+Arquivos alterados nesta correção: `src/app/AppProvider.tsx`, `src/pages/ProfileSetupPage.tsx`, `src/routes/AppRoutes.tsx`, seus testes de regressão em AppProvider/ProfileSetupPage/ServiceDetailsPage, `tests/homologation.test.mjs` e este relatório. Nenhum controle de autorização do backend foi relaxado, teste removido, any/@ts-ignore/eslint-disable adicionado ou check desabilitado.
+
+Riscos restantes: a idempotência server-side de criação de solicitações continua fora desta etapa; JWTs emitidos podem durar até expirar após logout; SMTP externo, carga, acessibilidade completa e bundle mantêm ressalvas. A migration de hardening ainda não foi aplicada remotamente por estas tarefas; CORS gerenciado e deploy remoto não foram exercitados. A revisão local não substitui a decisão humana de tirar o PR de Draft ou fazer merge.
+
+**Resultado: APTO PARA VALIDAR PR #57**, após estas correções e os checks registrados. Manter o PR existente em Draft até a decisão independente; não habilitar auto-merge, criar PR alternativo ou alterar sua base.
+
+Nenhum novo PR foi criado.
+Nenhum merge foi realizado.
+A main não foi alterada.
 Nenhuma alteração foi aplicada ao Supabase remoto.

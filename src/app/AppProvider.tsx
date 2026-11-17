@@ -50,9 +50,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } catch (requestError) {
         if (version !== requestVersion.current) return;
         setProfile(null);
-        setProfileError(requestError instanceof ApiError && requestError.status === 404
-          ? ''
-          : 'Não foi possível carregar seu perfil. Verifique a conexão e tente novamente.');
+        const profileMissing = requestError instanceof ApiError && (
+          requestError.status === 404 ||
+          (requestError.status === 403 && requestError.message === 'PROFILE_REQUIRED')
+        );
+        setProfileError(profileMissing ? '' : 'Não foi possível carregar seu perfil. Verifique a conexão e tente novamente.');
       }
     } else {
       setProfile(null);
