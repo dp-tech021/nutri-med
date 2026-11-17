@@ -24,8 +24,13 @@ export function authErrorMessage(error: unknown, operation: AuthOperation) {
   return 'Não foi possível concluir o cadastro. Revise os dados ou tente entrar e recuperar sua senha.';
 }
 
-function authCallback(path: '/login' | '/atualizar-senha') {
-  return new URL(path, window.location.origin).toString();
+export function authCallback(
+  path: '/login' | '/atualizar-senha',
+  base = import.meta.env.BASE_URL,
+  origin = window.location.origin,
+) {
+  const baseUrl = new URL(`${base.replace(/\/+$/, '')}/`, origin);
+  return new URL(path.replace(/^\/+/, ''), baseUrl).toString();
 }
 
 export function AuthPage({ mode }: { mode: 'login' | 'cadastro' | 'recuperar' }) {
