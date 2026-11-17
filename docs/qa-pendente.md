@@ -1,4 +1,6 @@
-# QA pendente antes do merge ou deploy
+# Histórico — QA pendente na implementação inicial
+
+> Registro das pendências anteriores à homologação integrada e ao hardening. As listas de testes não executados abaixo preservam os fatos daquela etapa; não são o resultado atual da branch de integração. Veja [homologação integrada](homologacao-integrada.md) para evidências e riscos remanescentes.
 
 ## Implementado no código, sem evidência integrada
 Frontend básico, Auth, API, schema, propostas, contratações, histórico e transições.

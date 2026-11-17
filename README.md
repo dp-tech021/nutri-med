@@ -21,6 +21,8 @@ Registro profissional significa somente **“Registro informado pelo profissiona
 
 **Aceitar proposta em Serviços Gerais registra contratação; não significa pagamento.** Não há gateway, split, cobrança ou transferência reais. Não foi integrada a branch de pagamento simulado. Atendimento Saúde, prontuário, coleta de sintomas, exames e histórico clínico permanecem fora do fluxo disponível.
 
+Chat, avaliações públicas, notificações, agenda e cancelamento comum após contratação continuam fora do escopo disponível.
+
 Cada conta tem um papel (`cliente` ou `prestador`); cliente pode descobrir ambas as áreas. No MVP, prestador tem um único domínio profissional. Cadastro público não cria administradores e não há painel administrativo.
 
 ## Stack efetivamente utilizada
@@ -125,6 +127,6 @@ Fases preservadas: F1 fundação/documentação; F2 plataforma; F3 contratação
 
 Os PRs [#2](https://github.com/dp-tech021/nutri-med/pull/2) (escopo), [#3](https://github.com/dp-tech021/nutri-med/pull/3) (arquitetura), [#4](https://github.com/dp-tech021/nutri-med/pull/4) (primeira implementação) e [#38](https://github.com/dp-tech021/nutri-med/pull/38) (organização, backlog e templates) são referências históricas; não se presume seu status atual. A entrega das duas áreas foi evoluída após o [PR #56](https://github.com/dp-tech021/nutri-med/pull/56). O [PR #5](https://github.com/dp-tech021/nutri-med/pull/5) é referência histórica de pagamento simulado, não integrado nesta branch e sem cobrança real.
 
-**Orçamento autorizado: R$ 0.** Supabase Free, GitHub Free e eventual hospedagem gratuita têm quotas; disponibilidade, SMTP, domínio e operação comercial não são garantidos sem custo. Não ativar billing, deploy ou recursos pagos sem autorização expressa. Consultar os limites oficiais de [Supabase](https://supabase.com/docs/guides/platform/billing-on-supabase) e [GitHub](https://docs.github.com/) antes de qualquer decisão futura. Não há hospedagem de produção definida por esta preparação.
+**Orçamento autorizado: R$ 0.** Supabase Free, GitHub Free e eventual hospedagem gratuita têm quotas; disponibilidade, SMTP, domínio e operação comercial não são garantidos sem custo. Não ativar billing, deploy ou recursos pagos sem autorização expressa. Consultar os limites oficiais de [Supabase](https://supabase.com/docs/guides/platform/billing-on-supabase) e [GitHub](https://docs.github.com/) antes de qualquer decisão futura. Cloudflare Pages Free foi uma candidata histórica de hospedagem, sem deploy; os [limites oficiais](https://developers.cloudflare.com/pages/platform/limits/) devem ser reavaliados em eventual decisão futura. Não há hospedagem de produção definida por esta preparação.
 
 **Licença ainda não definida.** Um repositório público não concede automaticamente permissão geral de copiar ou redistribuir. Os colaboradores devem decidir direitos e licença na [NM-38](https://github.com/dp-tech021/nutri-med/issues/44).

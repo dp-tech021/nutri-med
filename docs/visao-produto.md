@@ -1,18 +1,29 @@
 # Visão do produto — NM-01
 
+## Estado consolidado para revisão de integração — 17/11/2026
+
+Nutri-Med é uma plataforma única com duas áreas distintas, **Saúde** e **Serviços Gerais**. Saúde inclui médicos, nutricionistas, psicólogos, fisioterapeutas e outros profissionais da saúde. Serviços Gerais inclui prestadores como eletricistas, encanadores, pintores, técnicos, diaristas e outros, conforme a taxonomia disponível; esses exemplos não criam novas categorias.
+
+- **Saúde:** descoberta, profissão/especialidade informada, cidade, modalidade, perfil público e painel profissional para atributos e ofertas existentes. Registro é informado pelo profissional e não verificado oficialmente. Cadastro inicial Saúde na UI e solicitação administrativa continuam bloqueados; `POST /requests` Saúde é rejeitado.
+- **Serviços Gerais:** catálogo, categorias, preços, anúncios, orçamento, propostas, aceite, acompanhamento e conclusão.
+- **Limites:** não há prontuário, atendimento clínico ou coleta de sintomas/exames/histórico clínico; upload continua bloqueado e pagamento real fora do escopo. Não há verificação oficial de registro profissional.
+- **Integração:** frontend, API, oito migrations, homologação e hardening estão reunidos para revisão na branch `integration/nm-mvp-saude-servicos`. Nenhuma aplicação remota ou publicação decorre dessa preparação. Ver [homologação integrada](homologacao-integrada.md).
+
+Os recortes históricos abaixo preservam decisões e contratos propostos em entregas anteriores. Afirmações históricas de “apenas informativa”, “futuro” ou “não implementado” não descrevem o estado consolidado acima. NM-01 continua aberta para decisões comerciais, elegibilidade, regiões, verificação e suporte; testes técnicos não encerram essas decisões.
+
 ## Contexto e decisão
 O Nutri-Med deixa de ser definido como puramente generalista. É uma aplicação única com Saúde e Serviços Gerais, compartilhando conta, autenticação, infraestrutura e componentes.
 
 ## Motivo e alternativas
 A proposta inclui profissionais de saúde e prestadores gerais. Uma plataforma somente médica excluiria serviços gerais; uma puramente generalista apagaria as particularidades da saúde; dois sites duplicariam custo e manutenção.
 
-## Consequências e contrato futuro
+## Histórico — consequências e contrato anterior à descoberta por domínio
 Home e rotas distintas. O catálogo existente permanece em `/servicos`. `/saude` é informativa até a API suportar `domain: 'health' | 'services'`. Preservar registros atuais como serviços gerais em eventual migração incremental. Saúde: profissão, especialidade, registro informado sem selo de verificação, cidade e modalidade. Serviços: categoria, cidade, modalidade e preço quando suportado. Validar domínio no servidor; não classificar por texto livre. Em Saúde, usar “Solicitar atendimento” sem campo clínico. Não coletar sintomas, exames, diagnóstico ou prontuário. Usar só dados sintéticos nos testes. Pagamento real segue fora do escopo.
 
 ## NM-01
-Resolvido: Saúde e Serviços Gerais no mesmo aplicativo, em áreas distintas. Pendentes: categorias iniciais, regiões, critérios e verificação profissional, monetização, regras comerciais e suporte. Não fechar a issue por esta decisão parcial.
+Resolvido: Saúde e Serviços Gerais no mesmo aplicativo, em áreas distintas. Pendentes: aprovação comercial da taxonomia inicial, regiões, critérios e verificação profissional, monetização, regras comerciais e suporte. Não fechar a issue por esta decisão parcial.
 
-## Contrato mínimo da próxima etapa (proposto, não implementado)
+## Histórico — contrato mínimo proposto antes da implementação por domínio
 
 ```ts
 type MarketplaceDomain = 'health' | 'services';
@@ -40,11 +51,11 @@ Planejar evolução incremental: registros sem domínio são interpretados como 
 - Diferenciar `registrationReported` (declaração do profissional) de eventual `verificationStatus` controlado pelo servidor (`not_verified`, `pending`, `verified`, `rejected`, `expired`). Uma futura verificação oficial exige fonte competente, responsável, evidência auditável, data e validade; um número informado, cadastro ou login não autorizam selo. Não exibir “verificado” enquanto esse processo não existir.
 - Não reutilizar o campo livre de necessidade de Serviços Gerais para sintomas ou dados clínicos em Saúde. Jornada de atendimento e minimização de dados exigem desenho próprio antes de ativação.
 
-### Limites desta entrega
+### Limites históricos da entrega inicial (PR #56)
 
 Somente conteúdo e navegação frontend, testes e documentação. Não implementados: discriminação de domínio persistida, taxonomias de Saúde, API/filtros por domínio, registro profissional estruturado, verificação oficial, agendamento ou solicitação de atendimento de saúde. Sem alterações em Supabase, migrações ou credenciais. As jornadas existentes de autenticação, recuperação, perfis, painéis e solicitações seguem preservadas; verificação frontend não equivale a validação integrada do backend.
 
-## Texto proposto para a NM-01
+## Histórico — texto proposto para a NM-01 na entrega inicial
 
 > Decisão parcial: Nutri-Med é uma aplicação única com duas áreas distintas, Saúde e Serviços Gerais, compartilhando conta, autenticação, infraestrutura e design system. Serviços Gerais preserva o catálogo `/servicos` e o fluxo existente. Saúde possui somente página informativa `/saude`, sem catálogo ou atendimento implementado. O contrato futuro é `MarketplaceDomain = 'health' | 'services'`, com categorias, filtros e atributos por domínio e preservação dos registros legados como `services`. Registro profissional informado não equivale a verificação oficial. **Manter NM-01 aberta**: faltam categorias iniciais, regiões, critérios de elegibilidade e verificação profissional, monetização, regras comerciais e suporte. Não considerar Saúde concluída pelo PR #56.
 

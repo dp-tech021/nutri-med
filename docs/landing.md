@@ -1,4 +1,6 @@
-# Landing — Saúde e Serviços Gerais (PR #56 / NM-05)
+# Histórico — Landing Saúde e Serviços Gerais (PR #56 / NM-05)
+
+> Registro da primeira entrega de navegação. As referências abaixo a Saúde sem catálogo/backend descrevem aquele incremento, não a implementação atual. Consulte a [visão consolidada](visao-produto.md) e a [homologação integrada](homologacao-integrada.md) para o estado atual.
 
 A Home apresenta duas áreas da mesma aplicação. O card Saúde usa **Encontrar profissional** → `/saude`; Serviços Gerais usa **Encontrar serviço** → `/servicos`. A primeira rota informa a indisponibilidade do catálogo; a segunda preserva o catálogo existente. Nenhuma avaliação, depoimento, quantidade de profissionais ou selo foi acrescentado.
 

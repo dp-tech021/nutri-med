@@ -1,6 +1,6 @@
 # Homologação integrada — Nutri-Med
 
-> Atualização mais recente: **Hardening pré-integração**, ao final deste documento. As seções anteriores registram a homologação histórica do commit `a143dff`. A adaptação antiga com bundle/entrypoint temporário não é o procedimento desta nova etapa.
+> Atualização mais recente: **Preparação da integração — Saúde e Serviços Gerais**, ao final deste documento. As seções anteriores preservam a homologação e o hardening das branches de origem, com seus SHAs e limites históricos. A adaptação antiga com bundle/entrypoint temporário não foi usada no hardening nem na preparação da integração.
 
 Data: 17/11/2026. Escopo: consolidação técnica, testes e documentação; nenhum recurso de produto, pagamento ou upload habilitado.
 
@@ -477,4 +477,116 @@ Riscos restantes: resolução de dependências exige rede/CA válidas ou cache n
 Nenhum PR foi criado.
 Nenhum merge foi realizado.
 A main não foi alterada.
+Nenhuma alteração foi aplicada ao Supabase remoto.
+
+
+## Preparação da integração — Saúde e Serviços Gerais
+
+### Origem, main e branch de revisão
+
+Data: 17/11/2026. Esta etapa prepara uma branch para revisão independente; não cria PR nem integra na main.
+
+| Referência | SHA / situação |
+| --- | --- |
+| Origem validada `feat/nm-solicitacoes-paineis-por-dominio` | `32c6a48a78e2c73baeb80125a5d76837f1da1932`, working tree limpa na abertura |
+| Main integrada | `900e3738f462b265daa8cc62942a9483d870b5e3`, confirmada também por `git ls-remote` |
+| Única branch criada | `integration/nm-mvp-saude-servicos`, a partir da origem validada |
+| Commit de merge | `6aac8df8811b8dd395c24d4e0fa17a41c4b68ffc`, com os dois SHAs acima como pais |
+| SHA final da preparação | Commit que contém esta seção, resolvido por `git log -1 --format=%H -- docs/homologacao-integrada.md`; hash literal e divergência final entregues no chat |
+
+A main é ancestral da branch após o merge. Não se usou estratégia global `ours`/`theirs`, reset destrutivo, force push ou outra branch de trabalho. A branch de origem não foi alterada.
+
+### Conflitos e resolução
+
+| Arquivo | Conflito | Resolução |
+| --- | --- | --- |
+| `README.md` | Conteúdo: main descrevia marketplace generalista e negava Saúde; feature já tinha duas áreas, mas carregava instruções/limites antigos de etapas anteriores | Revisão integral. Preservada a definição Saúde + Serviços Gerais, limites atuais e execução real com npm ci. Combinados responsáveis, processo, Issues, custos, licença e referências históricas úteis da main. |
+| `docs/backlog.md` | Add/add, com recortes de produto diferentes | Preservado o conteúdo evoluído da feature e todo o cadastro administrativo da main. As 38 linhas de Issues foram comparadas e mantêm IDs, fases, prioridades, responsáveis e links. Recorte PR #56 marcado histórico; estado consolidado e evidências atuais acrescentados. |
+
+O template `.github/ISSUE_TEMPLATE/tarefa.md` vindo da main tinha três linhas com espaço final; foram normalizadas para passar em diff check, sem alterar critérios ou responsáveis. `docs/processo-colaboracao.md` e `.github/pull_request_template.md` foram preservados. A presença de um template não significa criação de PR.
+
+Correções documentais posteriores ao commit de merge, em commit separado:
+
+- `README.md`: limites de escopo e referência histórica de hospedagem, sem incluir tecnologia não utilizada na stack ativa.
+- `docs/visao-produto.md`: estado atual no início; contratos propostos e texto inicial da NM-01 identificados como históricos. Saúde tem descoberta/perfil, sem atendimento, prontuário, verificação oficial ou coleta clínica.
+- `docs/questoes-em-aberto.md`: preservadas perguntas comerciais/operacionais/licença; decisão parcial das duas áreas registrada sem fechar Issue. Mantido bloqueio de dados clínicos.
+- `docs/landing.md` e `docs/qa-pendente.md`: conteúdo anterior preservado e identificado como histórico, com links para evidências atuais.
+- `docs/homologacao-integrada.md`: esta seção e precedência das etapas históricas.
+
+Nenhuma aplicação foi reescrita para resolver conflitos. Uma comparação por Git confirmou que **src, supabase, scripts, testes, package.json e package-lock.json são idênticos à origem `32c6a48`**, inclusive todas as migrations. Não foi trazida a branch de pagamento simulado.
+
+### Contratos preservados
+
+- Frontend: `/`, `/saude`, `/servicos`, `/login`, `/cadastro`, `/recuperar`, `/atualizar-senha`, `/prestador/:id`, `/servico/:id`, `/dashboard`, anúncios, `/minhas-solicitacoes`, `/solicitacoes-recebidas`, `/propostas` e `/pedido/:id`. Painéis continuam distintos por papel/domínio; recuperação e tratamento de sessão têm testes de componente.
+- Backend: token Auth, domínio, RLS/grants, limites transacionais de escrita, catálogo, CRUD, requests/proposals/contracts/request_events, propriedade, snapshots, versões e transições. Requests Saúde continuam 409 e upload 501.
+- SDK Edge: import exato `npm:@supabase/supabase-js@2.119.0`, com teste de alinhamento ao lockfile. Entrypoint original `supabase/functions/api/index.ts`, sem bundle ou configuração alternativa.
+- CORS: `ALLOWED_ORIGINS` continua fonte de verdade; Python é somente adaptação local do gateway, sem lista fixa de produção ou dependência Python de produção.
+- Migration de segurança `20261117162451_revoke_rls_auto_enable_public_execute.sql` preservada byte a byte, sem renomear, consolidar ou reordenar migrations. Ela restringe EXECUTE; não remove função ou ensure_rls. Os testes locais cobrem ausência/presença, idempotência e funcionamento do trigger após revogação.
+
+### Comandos e ambiente pós-merge
+
+Mesmo ambiente local e versões descritos no hardening. O Supabase foi iniciado vazio, aplicando as oito migrations na ordem existente. Foram reutilizados apenas o perfil Docker local de proxy e o cache npm legítimo preparado com Deno 2.1.4. O cache não contém bundle de aplicação nem credenciais; `config.toml` permaneceu inalterado. Auth tem uma sonda `wget` unhealthy neste host, por limitação ambiental já registrada; os fluxos reais Auth/API passaram, e o gate de inicialização foi ignorado explicitamente pela CLI.
+
+```bash
+git fetch origin
+git checkout feat/nm-solicitacoes-paineis-por-dominio
+git status
+git rev-parse HEAD
+git checkout -b integration/nm-mvp-saude-servicos
+git fetch origin
+git log --oneline --decorate --graph --all -30
+git merge origin/main
+# Resolução manual de README/backlog e normalização de whitespace do template.
+git add README.md docs/backlog.md .github/ISSUE_TEMPLATE/tarefa.md
+git commit --no-edit
+npm ci --cache /workspace/work/nutri-med-homologacao-20261117/npm-cache
+npm run typecheck
+npm test
+npm run lint
+npm run build
+SUPABASE_HOME=/workspace/work/nutri-med-integration/supabase-home SUPABASE_INTERNAL_IMAGE_REGISTRY=docker.io DOCKER_CONFIG=/workspace/work/nutri-med-homologacao-20261117/docker-config node_modules/.bin/supabase start --ignore-health-check -x realtime,storage-api,imgproxy,postgres-meta,studio,logflare,vector,supavisor
+node scripts/test-security-migration.mjs
+node scripts/test-domain-migration.mjs
+docker cp /workspace/work/nutri-med-hardening/deno-cache/npm/. supabase_edge_runtime_nutri-med:/root/.cache/deno/npm
+python scripts/configure-local-cors.py
+node scripts/audit-local-database.mjs
+SUPABASE_HOME=/workspace/work/nutri-med-integration/supabase-home node scripts/run-local-homologation.mjs --all
+git diff --check
+git diff --check origin/main...HEAD
+git status
+git diff origin/main...HEAD --stat
+```
+
+A busca por marcadores de conflito no repositório não encontrou resultados. Os arquivos temporários e logs ficaram em `/workspace/work/nutri-med-integration`, fora da árvore versionada. A revisão de segredos cobre a alteração final antes do commit; não se versionam `.env`, chaves, logs de status ou arquivos Docker/Supabase temporários.
+
+### Resultados pós-merge
+
+| Verificação | Resultado |
+| --- | --- |
+| `npm ci` | APROVADO; 268 pacotes, lockfile preservado |
+| `npm run typecheck` | APROVADO |
+| `npm test` sem chaves locais | 10 testes Node + 82 Vitest aprovados; 4 integrados declarados ignorados, não contados como sucesso integrado |
+| Suíte completa com runner local `--all` | **96 aprovados: 14 Node + 82 Vitest; zero falhas e zero skips**. Vitest em 19 arquivos, 41,01 s |
+| `npm run lint` | APROVADO, sem desativar regras ou remover testes |
+| `npm run build` | APROVADO; mesmo JS `index-5AcldSas.js`, 562,94 kB / 161,80 kB gzip, aviso de tamanho preservado |
+| Migrations limpas | APROVADO; oito versões aplicadas sem erro SQL, nenhum arquivo alterado |
+| Teste da migration de segurança | APROVADO; EXECUTE indevido removido e event trigger preservado/funcional em fixture local isolada |
+| Teste de legado | APROVADO; IDs, preços, categorias, perfis, pedidos, propostas, contratos e histórico preservados |
+| Auditoria do banco local | APROVADO; dez tabelas, RLS/grants/RPCs; 63 constraints, 22 índices, 2 triggers de linha; SECURITY DEFINER públicas da aplicação com grants restritos |
+| Homologação HTTP | APROVADO pelo entrypoint original: Auth, domínio, catálogos/perfis, whitelist, propriedade, RLS, concorrência de aceite, conclusão, CORS, bloqueio de Saúde e upload |
+| Integridade frontend/backend | APROVADO; árvores de código iguais à origem validada e regressões existentes aprovadas |
+| Documentação administrativa | APROVADO; responsáveis, 38 Issues, prioridades, processo e templates preservados; história identificada sem apagar evidências |
+
+Não foi repetida uma revisão visual manual completa ou validação SMTP externo nesta etapa. A interface não mudou; os testes de componentes e jornadas HTTP foram reexecutados, e as evidências visuais anteriores permanecem no relatório histórico. Recuperação de senha por e-mail externo, acessibilidade completa e desempenho em carga não são declarados aprovados por esse merge.
+
+### Divergência e limites para revisão final
+
+A divergência contra main inclui o aplicativo e o histórico acumulado da feature, não somente os arquivos documentais resolvidos agora. `origin/main` é ancestral do merge e a branch não ficou atrás da main integrada. Os números e o SHA final após o commit documental são informados no relatório de entrega. O commit de merge foi preservado; a revisão documental adicional é separada.
+
+Riscos restantes: sonda Auth/DNS/CA do host requerem as adaptações locais documentadas; a migration de segurança ainda não foi aplicada remotamente; CORS gerenciado e produção não foram exercitados; idempotência de criação de solicitações no servidor, expiração/revogação de JWTs, SMTP externo, carga, acessibilidade e bundle continuam com as ressalvas anteriores. Não habilitar upload, pagamento real ou atendimento Saúde com base nesta preparação.
+
+**Recomendação: APTO PARA REVISÃO FINAL DE INTEGRAÇÃO.** A branch está preparada para revisão independente; nenhum PR é criado por esta entrega, e nenhum merge na main, deploy ou aplicação remota está autorizado ou realizado aqui.
+
+Nenhum PR foi criado.
+Nenhum merge foi realizado na main.
 Nenhuma alteração foi aplicada ao Supabase remoto.
