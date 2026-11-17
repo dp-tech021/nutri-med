@@ -9,6 +9,7 @@ test('refatoração preserva as rotas públicas e privadas do MVP', () => {
   for (const path of [
     '/',
     '/servicos',
+    '/saude',
     '/login',
     '/cadastro',
     '/recuperar',

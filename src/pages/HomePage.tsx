@@ -28,11 +28,11 @@ function MarketplaceIllustration() {
       <span className="visual-icon">⌕</span>
       <span className="visual-line visual-line--wide" />
       <span className="visual-line" />
-      <span className="visual-tag">Serviço</span>
+      <span className="visual-tag">Saúde e Serviços</span>
     </div>
     <div className="hero-visual__card hero-visual__card--proposal">
       <span className="visual-check">✓</span>
-      <strong>Proposta recebida</strong>
+      <strong>Escolha sua área</strong>
       <span className="visual-line visual-line--wide" />
       <span className="visual-line" />
     </div>
@@ -53,8 +53,8 @@ export function HomePage() {
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero-copy">
         <p className="eyebrow">Saúde e serviços gerais</p>
-        <h1 id="hero-title">Encontre o profissional certo para o que você precisa.</h1>
-        <p className="hero-subtitle">Profissionais de saúde e prestadores de serviços em um só lugar.</p>
+        <h1 id="hero-title">Saúde e Serviços Gerais em uma só aplicação.</h1>
+        <p className="hero-subtitle">Escolha a área que combina com sua necessidade. Explore Serviços Gerais ou conheça a proposta da área de Saúde, ainda em preparação.</p>
         <div className="hero-actions">
           <LinkButton to="/servicos">Explorar serviços <span aria-hidden="true">→</span></LinkButton>
           <LinkButton to="/#como-funciona" variant="secondary">Como funciona</LinkButton>
@@ -65,14 +65,14 @@ export function HomePage() {
     </section>
 
     <section className="landing-section audience-grid" aria-label="Áreas do Nutri-Med">
-      <Card className="audience-card"><h2>Saúde</h2><p>Encontre médicos, nutricionistas, psicólogos e fisioterapeutas.</p><LinkButton to="/saude">Encontrar profissional</LinkButton></Card>
-      <Card className="audience-card"><h2>Serviços</h2><p>Encontre eletricistas, encanadores, técnicos, pintores e outros prestadores.</p><LinkButton to="/servicos">Encontrar serviço</LinkButton></Card>
+      <Card className="audience-card"><h2>Saúde</h2><p>Conheça a área de Saúde. O catálogo de profissionais ainda não está disponível.</p><LinkButton to="/saude">Encontrar profissional</LinkButton></Card>
+      <Card className="audience-card"><h2>Serviços Gerais</h2><p>Explore os serviços publicados, consulte as condições e solicite um orçamento.</p><LinkButton to="/servicos">Encontrar serviço</LinkButton></Card>
     </section>
     <section id="como-funciona" className="landing-section how-it-works" aria-labelledby="how-title">
       <div className="section-heading">
         <p className="eyebrow">Como funciona</p>
-        <h2 id="how-title">Do pedido à conclusão, passo a passo</h2>
-        <p>Você mantém o controle da decisão antes de aceitar uma proposta.</p>
+        <h2 id="how-title">Em Serviços Gerais: do pedido à conclusão</h2>
+        <p>Este fluxo é do catálogo de Serviços Gerais. A jornada de Saúde ainda será definida; não há agendamento ou solicitação de atendimento disponível.</p>
       </div>
       <ol className="steps-grid">
         {steps.map((step) => <li key={step.number}>
@@ -85,22 +85,22 @@ export function HomePage() {
 
     <section className="landing-section audience-section" aria-labelledby="audience-title">
       <div className="section-heading">
-        <p className="eyebrow">Uma plataforma, dois caminhos</p>
+        <p className="eyebrow">Clientes e prestadores</p>
         <h2 id="audience-title">Escolha como participar</h2>
       </div>
       <div className="audience-grid">
         <Card className="audience-card audience-card--client">
           <span className="audience-icon" aria-hidden="true">⌕</span>
           <p className="eyebrow">Para clientes</p>
-          <h3>Encontre serviços e peça propostas</h3>
-          <p>Explore opções, explique sua necessidade e analise as condições recebidas antes de decidir.</p>
+          <h3>Escolha a área de que precisa</h3>
+          <p>Em Serviços Gerais, consulte anúncios e peça propostas. Em Saúde, conheça o que está em preparação.</p>
           <LinkButton to="/servicos">Explorar serviços</LinkButton>
         </Card>
         <Card className="audience-card audience-card--provider">
           <span className="audience-icon" aria-hidden="true">＋</span>
           <p className="eyebrow">Para prestadores</p>
           <h3>Apresente seu trabalho e responda pedidos</h3>
-          <p>Crie uma conta de prestador, publique serviços e envie propostas com escopo, prazo e valor.</p>
+          <p>Crie uma conta de prestador para publicar em Serviços Gerais e responder com escopo, prazo e valor. A publicação em Saúde ainda não está disponível.</p>
           <LinkButton to="/cadastro?tipo=prestador" variant="secondary">Criar conta de prestador</LinkButton>
         </Card>
       </div>
@@ -108,9 +108,9 @@ export function HomePage() {
 
     <section className="landing-cta" aria-labelledby="cta-title">
       <div>
-        <p className="eyebrow">Comece pelo catálogo</p>
-        <h2 id="cta-title">Veja os serviços disponíveis</h2>
-        <p>Conheça as opções publicadas e encontre um ponto de partida para sua solicitação.</p>
+        <p className="eyebrow">Catálogo de Serviços Gerais</p>
+        <h2 id="cta-title">Explore os serviços publicados</h2>
+        <p>Para Serviços Gerais, consulte as opções e condições. Para Saúde, acesse a página informativa acima.</p>
       </div>
       <LinkButton to="/servicos">Explorar agora <span aria-hidden="true">→</span></LinkButton>
     </section>

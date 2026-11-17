@@ -1,6 +1,6 @@
 # Nutri-Med — MVP em desenvolvimento
 
-Plataforma única com duas áreas: Saúde e Serviços Gerais. As áreas compartilham conta, autenticação e infraestrutura, com categorias, filtros e perfis próprios. Veja [a visão do produto](docs/visao-produto.md).
+Plataforma única com duas áreas: Saúde e Serviços Gerais. As áreas compartilham conta, autenticação e infraestrutura, com categorias, filtros e atributos próprios previstos para a próxima etapa. Hoje somente Serviços Gerais possui catálogo; `/saude` é informativa, sem busca, agendamento ou profissionais listados. Veja [a visão do produto](docs/visao-produto.md).
 
 **O código desta branch ainda não foi validado de ponta a ponta. Não publicar em produção.**
 
@@ -106,3 +106,7 @@ npm run test:integration
 Nunca cole a chave administrativa neste chat, em commits ou na interface web. Confirme que a URL aponta **somente** para localhost; o teste cria contas, anúncios e pedidos artificiais. Não rode contra produção.
 
 Documentação oficial: https://supabase.com/docs/guides/local-development ; https://supabase.com/docs/guides/functions/auth ; https://supabase.com/docs/guides/platform/free-project-pausing
+
+## Entrega das duas áreas — PR #56
+
+A Home distingue Saúde de Serviços Gerais e preserva `/servicos`, conta, recuperação de senha, perfis, painéis e solicitações. O contrato de domínio e os limites estão em [visão do produto](docs/visao-produto.md), o conteúdo da Home em [landing](docs/landing.md) e as próximas decisões no [backlog](docs/backlog.md). `GET /health` é apenas diagnóstico da API, não um catálogo de Saúde. O backend atual ainda não implementa `MarketplaceDomain`; nenhuma migração é incluída nesta entrega.

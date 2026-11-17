@@ -1,9 +1,24 @@
 import { render, screen } from '@testing-library/react';
 import type { Session } from '@supabase/supabase-js';
 import { MemoryRouter, useLocation } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
+import { api } from '../api';
 import { AppContext } from '../app/AppContext';
 import { AppRoutes } from './AppRoutes';
+
+vi.mock('../api', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../api')>(), api: vi.fn(),
+}));
+const apiMock = vi.mocked(api);
+beforeEach(() => {
+  apiMock.mockReset();
+  apiMock.mockImplementation(async (path) => path === '/categories' ? [] : {
+    items: [{ id: 'legacy-demo', title: 'Serviço sintético legado', description: 'Exemplo de teste',
+      category: 'limpeza', city: 'Cidade Demo', modality: 'presencial', price_type: 'orcamento', price_cents: null }],
+    next_cursor: null,
+  });
+});
 
 function LocationSnapshot() {
   const location = useLocation();
@@ -30,4 +45,39 @@ describe('proteção de rotas', () => {
     expect(await screen.findByText('Página não encontrada')).toBeVisible();
     expect(screen.getByLabelText('localização')).toHaveTextContent('"pathname":"/retorno-teste"');
   });
+});
+
+describe('áreas do marketplace', () => {
+  it.each([
+    ['Encontrar profissional', '/saude', 'Saúde'],
+    ['Encontrar serviço', '/servicos', 'Encontre serviços'],
+  ])('navega pelo CTA %s no roteador real', async (label, path, heading) => {
+    const user = userEvent.setup();
+    render(<AppContext.Provider value={{ session: null, profile: null, refresh: async () => undefined }}>
+      <MemoryRouter><AppRoutes /><LocationSnapshot /></MemoryRouter>
+    </AppContext.Provider>);
+    await user.click(screen.getByRole('link', { name: label }));
+    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeVisible();
+    expect(screen.getByLabelText('localização')).toHaveTextContent(`"pathname":"${path}"`);
+    if (path === '/saude') {
+      expect(screen.getByText('Catálogo de Saúde em preparação')).toBeVisible();
+      expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    } else {
+      expect(await screen.findByRole('heading', { name: 'Serviço sintético legado' })).toBeVisible();
+      expect(apiMock.mock.calls.some(([url]) => String(url).startsWith('/catalog?limit=12'))).toBe(true);
+      expect(apiMock.mock.calls.some(([url]) => String(url).includes('domain='))).toBe(false);
+    }
+  });
+
+  it.each(['/dashboard', '/novo-servico', '/editar-servico/demo', '/meus-servicos', '/solicitacoes-recebidas', '/propostas', '/minhas-solicitacoes', '/pedido/demo'])(
+    'protege %s de acesso anônimo', async (path) => {
+      render(<AppContext.Provider value={{ session: null, profile: null, refresh: async () => undefined }}>
+        <MemoryRouter initialEntries={[path]}><AppRoutes /><LocationSnapshot /></MemoryRouter>
+      </AppContext.Provider>);
+      expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeVisible();
+      expect(screen.getByLabelText('localização')).toHaveTextContent('"pathname":"/login"');
+      expect(screen.getByLabelText('localização')).toHaveTextContent(`"from":"${path}"`);
+    },
+  );
 });

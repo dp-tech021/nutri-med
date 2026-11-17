@@ -103,7 +103,7 @@ small, .muted { color: var(--color-muted); }
 
 .site-header { position: sticky; top: 0; z-index: 40; border-bottom: 1px solid rgb(183 203 200 / 72%); background: rgb(255 255 255 / 94%); backdrop-filter: blur(12px); }
 .site-nav { position: relative; display: flex; min-height: 4.5rem; align-items: center; justify-content: space-between; gap: var(--space-4); }
-.brand { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text); font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em; text-decoration: none; }
+.brand { flex-shrink: 0; white-space: nowrap; display: inline-flex; align-items: center; gap: var(--space-2); color: var(--color-text); font-size: 1.25rem; font-weight: 800; letter-spacing: -0.03em; text-decoration: none; }
 .brand:hover { color: var(--color-primary); }
 .brand-mark { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 0.65rem; background: var(--color-primary); color: white; font-size: 1rem; font-weight: 900; box-shadow: 0 5px 14px rgb(18 107 114 / 24%); }
 .menu-toggle { display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: white; color: var(--color-text); font-size: 1.4rem; cursor: pointer; }
@@ -334,6 +334,7 @@ small, .muted { color: var(--color-muted); }
   .main-menu { position: static; display: flex; flex-direction: row; align-items: center; gap: var(--space-2); border: 0; padding: 0; background: transparent; box-shadow: none; }
   .main-menu > a { display: inline-flex; align-items: center; padding-inline: 0.65rem; }
   .main-menu .nav-signup { padding-inline: var(--space-4); }
+  .account-name { max-width: 10rem; overflow-wrap: anywhere; }
   .catalog-filters { grid-template-columns: 1.5fr 0.8fr 1fr 1fr 0.9fr; align-items: start; }
   .services-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .service-details-layout { grid-template-columns: minmax(0, 1fr) minmax(18rem, 24rem); }

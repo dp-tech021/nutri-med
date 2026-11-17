@@ -7,6 +7,7 @@ import { CatalogPage } from '../pages/CatalogPage';
 import { ClientRequestsPage } from '../pages/ClientRequestsPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { HomePage } from '../pages/HomePage';
+import { HealthPage } from '../pages/HealthPage';
 import { ProfileSetupPage } from '../pages/ProfileSetupPage';
 import { PublicProviderPage } from '../pages/PublicProviderPage';
 import { RequestDetailsPage } from '../pages/RequestDetailsPage';
@@ -35,7 +36,7 @@ export function AppRoutes() {
 
   return <Routes>
     <Route path="/" element={<HomePage />} />
-    <Route path="/saude" element={<Layout><h1>Saúde</h1><p>Área de descoberta de médicos, nutricionistas, psicólogos e fisioterapeutas.</p><p>O catálogo de saúde ainda não está disponível. Não envie sintomas, exames ou informações clínicas.</p><Link to="/">Voltar ao início</Link></Layout>} />
+    <Route path="/saude" element={<HealthPage />} />
     <Route path="/servicos" element={<CatalogPage />} />
     <Route path="/login" element={session
       ? <Navigate to={safeInternalPath((location.state as { from?: unknown } | null)?.from)} replace />

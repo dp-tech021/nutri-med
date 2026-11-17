@@ -12,6 +12,10 @@ export function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
 
   useEffect(() => {
+    if (!location.hash) window.scrollTo(0, 0);
+  }, [location.pathname, location.hash]);
+
+  useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname, location.hash]);
 
@@ -70,7 +74,7 @@ export function Layout({ children }: { children: ReactNode }) {
       </div>
       <nav aria-label="Navegação do rodapé">
         <Link to="/saude">Saúde</Link>
-          <Link to="/servicos">Serviços</Link>
+        <Link to="/servicos">Serviços</Link>
         <Link to="/#como-funciona">Como funciona</Link>
         {session ? <Link to="/dashboard">Painel</Link> : <>
           <Link to="/login">Entrar</Link>

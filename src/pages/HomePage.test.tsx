@@ -11,7 +11,7 @@ describe('página inicial', () => {
       <MemoryRouter><HomePage /></MemoryRouter>
     </AppContext.Provider>);
 
-    expect(screen.getByRole('heading', { level: 1, name: /Encontre quem pode ajudar/i })).toBeVisible();
+    expect(screen.getByRole('heading', { level: 1, name: /Saúde e Serviços Gerais em uma só aplicação/i })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Encontre um serviço' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Solicite um orçamento' })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Analise a proposta' })).toBeVisible();
