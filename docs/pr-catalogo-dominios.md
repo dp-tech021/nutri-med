@@ -1,14 +1,14 @@
 # Texto para abrir o PR incremental em rascunho
 
-**Repositório:** `dp-tech021/nutri-med`  
-**Título:** `feat: catálogo e perfis por domínio com compatibilidade legada`  
-**Head:** `feat/nm-catalogo-perfis-por-dominio`  
-**Base:** `feat/nm-redefinicao-saude-servicos` (PR #56 aberto, ponta revisada `63ed0ff`)  
+**Repositório:** `dp-tech021/nutri-med`
+**Título:** `feat: catálogo e perfis por domínio com compatibilidade legada`
+**Head:** `feat/nm-catalogo-perfis-por-dominio`
+**Base:** `feat/nm-redefinicao-saude-servicos` (PR #56 aberto, ponta revisada `63ed0ff`)
 **Estado a selecionar:** rascunho. Não fazer merge nem deploy.
 
 **Commit da implementação:** `c266d4c`. A documentação e evidências acompanham em commit posterior na mesma branch.
 
-**PR base:** https://github.com/dp-tech021/nutri-med/pull/56  
+**PR base:** https://github.com/dp-tech021/nutri-med/pull/56
 **Comparação para abrir o novo PR:** https://github.com/dp-tech021/nutri-med/compare/feat/nm-redefinicao-saude-servicos...feat/nm-catalogo-perfis-por-dominio?expand=1
 
 O PR incremental ainda não foi criado nesta execução: `api.github.com` está bloqueada com HTTP 403. O usuário pediu o material para repassar a outro chat. Este link é uma comparação, não um PR já aberto.
