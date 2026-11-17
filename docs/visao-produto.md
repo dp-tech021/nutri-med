@@ -53,3 +53,25 @@ A atualização efetiva da issue depende de acesso de escrita ao GitHub; o texto
 ## Evolução incremental após o PR #56
 
 O texto acima registra o contrato e os limites históricos da primeira entrega. A branch `feat/nm-catalogo-perfis-por-dominio` implementa o discriminador, a migração aditiva, catálogo/perfis por domínio e descoberta de Saúde, sem atendimento ou agendamento. Ver [contrato implementado e recuperação](catalogo-dominios.md). A aprovação das categorias comerciais, regiões, critérios, monetização e suporte continua pendente na NM-01; implementação técnica não aprova a operação de Saúde.
+
+## Domínio profissional, clientes e evolução futura
+
+`profiles.domain` classifica principalmente a atuação profissional do **prestador**, separadamente de `kind` (`cliente | prestador`). Cliente não pertence funcionalmente a um único marketplace: pode navegar nas duas áreas e é elegível, no modelo do produto, a contratar em Saúde e Serviços Gerais conforme a jornada de cada área seja habilitada. O default legado `services` no registro de um cliente é compatibilidade técnica, **não** uma restrição de navegação ou permissão de consumo.
+
+Na implementação atual, contratação por orçamento está disponível somente em Serviços Gerais. Solicitação administrativa, agendamento e contratação de Saúde ainda estão bloqueados; a elegibilidade do cliente às duas áreas não significa que esses recursos foram implementados.
+
+No MVP, **cada conta de prestador tem um único domínio profissional**, intencionalmente. Isso mantém coerência de perfil/anúncios com a FK composta existente; domínio não concede papel, propriedade ou autorização. `Prestador multi-domínio` é uma possível evolução futura, que exigirá desenho de perfis profissionais vinculados à mesma conta, compatibilidade de IDs, regras de acesso e migração específica. Não foi implementada nesta tarefa.
+
+### UNIQUE composta e FK
+
+`profiles.user_id` já é PRIMARY KEY, portanto `(user_id, domain)` não permite mais duplicações do que a PK: a UNIQUE composta é logicamente redundante quanto à unicidade de contas. Ela é, porém, a chave única explícita referenciada por `services(owner_id, domain) → profiles(user_id, domain)`. PostgreSQL exige uma chave única adequada ao conjunto de colunas referenciado; não deduz essa chave composta a partir da PK de apenas `user_id`.
+
+Por isso `profiles_user_domain_unique` foi preservada, junto com seu índice e a FK. O custo desse índice é uma escolha consciente do MVP para manter integridade do domínio sem redesenhar o banco. O teste PostgreSQL local confirma que removê-la sem CASCADE falha por dependência da FK; não se deve contornar isso removendo integridade referencial.
+
+### Taxonomia inicial de Saúde
+
+A nova migration `202611170002_initial_health_taxonomy.sql` adiciona, sem substituir registros existentes: Médico (`medico`), Nutricionista (`nutricionista`), Psicólogo (`psicologo`), Fisioterapeuta (`fisioterapeuta`) e Outro profissional da saúde (`outro-profissional-saude`).
+
+Como a modelagem atual exige especialidade, cada profissão recebe apenas `atuacao-geral` — **Atuação geral informada**. É um preenchimento técnico neutro, não um título de especialista. Evitou-se atribuir “Clínica geral” como qualificação médica por inferência. Esta lista não é taxonomia médica completa, não representa certificação, não afirma habilitação legal nem verificação de conselho. Será ampliada após decisão de produto. O seed não cria profissionais, contas, anúncios ou dados clínicos.
+
+Os INSERTs usam `ON CONFLICT DO NOTHING` por chave, podendo ser repetidos sem duplicação e sem sobrescrever rótulos personalizados. Ampliações ou mudanças posteriores devem ter migration própria e preservar referências existentes; a migration de domínios já aplicada não foi modificada.

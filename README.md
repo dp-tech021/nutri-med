@@ -118,3 +118,7 @@ Ver [modelo, API, recuperação e validação local](docs/catalogo-dominios.md).
 ## Solicitações e painéis por domínio
 
 Na branch incremental `feat/nm-solicitacoes-paineis-por-dominio`, Serviços Gerais mantém o orçamento e histórico. O painel de Saúde edita profissão/especialidade e modalidade das ofertas existentes; **Solicitar atendimento permanece indisponível**, sem campo clínico, até existir contrato administrativo validado. Ver [comportamento, testes e bloqueios](docs/solicitacoes-paineis-dominios.md). Nenhuma das alterações significa conclusão do MVP ou agenda/atendimento habilitados.
+
+## Taxonomia inicial e revisão do modelo profissional
+
+A taxonomia mínima de Saúde agora tem cinco profissões e a opção técnica “Atuação geral informada”, sem certificação ou verificação de habilitação. Cliente é transversal; prestador mantém um domínio profissional no MVP. Ver [revisão, contrato de publicação e resultados reais](docs/revisao-taxonomia-saude.md). Cadastro inicial e solicitações Saúde na interface continuam bloqueados.

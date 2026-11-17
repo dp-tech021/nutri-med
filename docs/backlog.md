@@ -119,3 +119,7 @@ A branch `feat/nm-catalogo-perfis-por-dominio` implementa o contrato técnico de
 - Painel de Saúde: editar profissão/especialidade e modalidade por endpoints já validados; manter Serviços Gerais com orçamento, propostas, histórico e preços.
 - **Bloqueio de produto/API:** solicitação administrativa de Saúde ainda não tem contrato de criação/estados/acesso. CTA indisponível, sem campos clínicos. Definir a jornada antes de habilitar; não reutilizar automaticamente propostas/contratação.
 - Ver [decisões, bloqueios e evidências](solicitacoes-paineis-dominios.md). Atendimento, agenda médica, verificação oficial e pagamentos não estão concluídos nem autorizados por esta entrega.
+
+## Revisão de taxonomia inicial e modelo profissional
+
+Implementada a lista mínima de cinco profissões solicitadas e a opção técnica neutra `atuacao-geral`, sem certificação ou profissionais fictícios. Cliente é transversal; prestador mantém um domínio por conta no MVP. Multi-domínio profissional fica como evolução futura, sem implementação. Ver [revisão e evidências](revisao-taxonomia-saude.md). Permanecem bloqueados cadastro inicial Saúde na UI, envio administrativo de atendimento, agenda, verificação oficial e pagamentos reais.
