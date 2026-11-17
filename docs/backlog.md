@@ -3,9 +3,11 @@
 > Registro criado em 2026-11-10. Este documento organiza planejamento e acompanhamento. Foram cadastradas **38 Issues**; a situação de cada uma deve ser conferida no GitHub. Nenhuma tarefa deve ser considerada concluída somente por ter sido cadastrada.
 
 ## Visão e limites do projeto
-Aplicação única com duas áreas distintas: **Saúde** e **Serviços Gerais**, compartilhando conta, autenticação, infraestrutura e design system. O fluxo de orçamento, propostas e conclusão existente pertence a Serviços Gerais. Saúde permanece informativa até existir suporte real no backend. O MVP **não processa pagamentos**. A decisão parcial da [NM-01](https://github.com/dp-tech021/nutri-med/issues/6) não encerra público-alvo, categorias, regiões, elegibilidade, verificação profissional ou regras comerciais. Ver [visão do produto](visao-produto.md).
+Aplicação única com duas áreas distintas: **Saúde** e **Serviços Gerais**, compartilhando conta, autenticação, infraestrutura e design system. O fluxo de orçamento, propostas e conclusão existente pertence a Serviços Gerais. Saúde possui descoberta e perfil profissional; atendimento administrativo e clínico continuam bloqueados. A homologação e o hardening locais estão registrados em [homologação integrada](homologacao-integrada.md). O MVP **não processa pagamentos**. A decisão parcial da [NM-01](https://github.com/dp-tech021/nutri-med/issues/6) não encerra público-alvo, categorias, regiões, elegibilidade, verificação profissional ou regras comerciais. Ver [visão do produto](visao-produto.md).
 
-## Recorte atual — PR #56
+## Recorte histórico — PR #56
+
+> Registro da primeira entrega; as pendências técnicas descritas neste recorte foram evoluídas nas seções posteriores. Não representa o estado atual da branch de integração.
 - NM-01: registrar as duas áreas da mesma aplicação; manter aberta enquanto categorias iniciais, regiões, critérios/verificação profissional, monetização, regras comerciais e suporte estiverem pendentes.
 - NM-05: Home, navegação e rodapé com entradas distintas; Saúde informativa. Critérios e QA em [landing](landing.md).
 - Próxima etapa backend: revisar o contrato `MarketplaceDomain` na visão do produto, decidir taxonomias por domínio e planejar compatibilidade legada antes de qualquer migração. API, filtros e atributos de Saúde ainda não implementados.
@@ -30,7 +32,7 @@ Aplicação única com duas áreas distintas: **Saúde** e **Serviços Gerais**,
 | Fase | Conteúdo | Gate para avançar |
 | --- | --- | --- |
 | **F1 — Fundação** | Produto, documentação, stack, design system, landing page | Público-alvo decidido, comandos locais reproduzíveis, PRs revistos |
-| **F2 — Plataforma** | Login, perfis, serviços, catálogo, imagens, solicitações | Dados reais persistem, contas isoladas, interfaces integradas |
+| **F2 — Plataforma** | Login, perfis, serviços, catálogo, imagens, solicitações | Persistência com fixtures sintéticas, contas isoladas e interfaces integradas; dados reais dependem de autorização e política própria |
 | **F3 — Contratação e qualidade** | Propostas, aceite, estados, testes, homologação | Teste integrado sem skips críticos, segurança e concorrência verificadas |
 | **F4 — Evolução financeira** | Pagamento demonstrativo, gateway, checkout, repasses | Só após decisão comercial, análise de custos/regulação e autorização explícita |
 
@@ -80,6 +82,8 @@ Aplicação única com duas áreas distintas: **Saúde** e **Serviços Gerais**,
 | [NM-38](https://github.com/dp-tech021/nutri-med/issues/44) | F1 | P1 | Produto/Processo | Id-UserDanilo + o-tedd | Definir licença e regras de uso do código |
 
 ## Histórico de PRs e cuidados com integração
+
+> Situação registrada na organização inicial de 10/11/2026, sem consulta atual ao GitHub. Pendências históricas de QA não substituem as evidências locais posteriores do relatório de homologação.
 - [PR #38](https://github.com/dp-tech021/nutri-med/pull/38): histórico da organização do README, backlog e templates.
 - [PR #2](https://github.com/dp-tech021/nutri-med/pull/2): diretrizes e escopo do MVP; revisão antes do merge.
 - [PR #3](https://github.com/dp-tech021/nutri-med/pull/3): arquitetura Supabase e custo zero; reconciliar com a base.
@@ -88,7 +92,7 @@ Aplicação única com duas áreas distintas: **Saúde** e **Serviços Gerais**,
 - [PR #1](https://github.com/dp-tech021/nutri-med/pull/1): teste de conexão encerrado sem merge.
 
 ## Questões e decisões ainda abertas
-As Issues **NM-33–NM-38** registram decisões de negócio e licenciamento que não devem ser respondidas por suposição. Consulte as decisões pendentes na [visão do produto](visao-produto.md) para as perguntas e responsáveis, e responda nas Issues antes de alterar regras de produto.
+As Issues **NM-33–NM-38** registram decisões de negócio e licenciamento que não devem ser respondidas por suposição. Consulte [questões em aberto](questoes-em-aberto.md) e a [visão do produto](visao-produto.md) para as perguntas e responsáveis, e responda nas Issues antes de alterar regras de produto.
 
 ## Consultas rápidas
 - [Todas as Issues](https://github.com/dp-tech021/nutri-med/issues)
@@ -123,3 +127,9 @@ A branch `feat/nm-catalogo-perfis-por-dominio` implementa o contrato técnico de
 ## Revisão de taxonomia inicial e modelo profissional
 
 Implementada a lista mínima de cinco profissões solicitadas e a opção técnica neutra `atuacao-geral`, sem certificação ou profissionais fictícios. Cliente é transversal; prestador mantém um domínio por conta no MVP. Multi-domínio profissional fica como evolução futura, sem implementação. Ver [revisão e evidências](revisao-taxonomia-saude.md). Permanecem bloqueados cadastro inicial Saúde na UI, envio administrativo de atendimento, agenda, verificação oficial e pagamentos reais.
+
+## Consolidação para revisão de integração — 17/11/2026
+
+A branch `integration/nm-mvp-saude-servicos` reúne frontend, backend, oito migrations ordenadas, homologação e hardening da origem `32c6a48`, com a documentação administrativa trazida da main. A revisão não cria PR, não integra na main nem aplica mudanças no Supabase remoto. O catálogo e os perfis Saúde estão implementados; a API bloqueia requests Saúde, e registro informado não é verificação oficial. Serviços Gerais possui orçamento, proposta, aceite, execução e conclusão. Upload continua 501 e pagamento real fora do escopo.
+
+Os resultados após o merge estão em [homologação integrada](homologacao-integrada.md). Não fechar Issues nem marcar os gates comerciais/operacionais como concluídos por esses testes locais. SMTP externo, acessibilidade completa, carga, idempotência de criação de solicitação e aplicação remota autorizada do hardening continuam pendentes. Todos os responsáveis, prioridades, links e as 38 Issues do planejamento foram preservados.

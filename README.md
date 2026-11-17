@@ -1,124 +1,130 @@
-# Nutri-Med — MVP em desenvolvimento
+# Nutri-Med — Saúde e Serviços Gerais
 
-Plataforma única com duas áreas: Saúde e Serviços Gerais. As áreas compartilham conta, autenticação e infraestrutura, com categorias, filtros e atributos próprios previstos para a próxima etapa. Esta branch incremental implementa descoberta por domínio em `/saude` e `/servicos`; Saúde depende da migração, da API correspondente e da configuração de taxonomias/ofertas. Não há agendamento ou solicitação de atendimento de saúde. Veja [a visão do produto](docs/visao-produto.md).
+O Nutri-Med é uma plataforma única com duas áreas distintas: **Saúde** e **Serviços Gerais**, compartilhando conta, autenticação e infraestrutura. Esta branch `integration/nm-mvp-saude-servicos` reúne a aplicação, backend, migrations, homologação e hardening para revisão independente. **Não está publicada nem validada para produção.**
 
-**O código desta branch ainda não foi validado de ponta a ponta. Não publicar em produção.**
+- **Saúde:** descoberta de médicos, nutricionistas, psicólogos, fisioterapeutas e outros profissionais da saúde, com profissão, especialidade informada, cidade, modalidade e perfil público.
+- **Serviços Gerais:** descoberta e contratação por orçamento de prestadores, como eletricistas, encanadores, pintores, técnicos, diaristas e outros profissionais, conforme as categorias disponíveis. Esses exemplos não adicionam categorias à taxonomia.
 
-## Funcionalidades codificadas (pendentes de QA)
-- React + TypeScript + Vite + Tailwind + Router: catálogo, login, cadastro, perfil, anúncios, pedidos, proposta, aceite e conclusão.
-- Supabase Auth: cadastro, login, logout e solicitação de recuperação de senha.
-- Edge Function `api`: API de acesso aos dados de negócio com verificação de token e perfil no servidor.
-- PostgreSQL com RLS, acesso direto ao banco bloqueado para `anon` e `authenticated`, contratos únicos e transições transacionais.
+A definição oficial e os limites estão em [visão do produto](docs/visao-produto.md). Decisões comerciais, elegibilidade e operação continuam nas [questões em aberto](docs/questoes-em-aberto.md).
 
-## Limitações conhecidas
-- Upload de imagens está **desativado** até inspeção segura.
-- Busca por prefixo de serviço ou nome público do prestador e filtros normalizados foram codificados, **mas ainda não testados com PostgreSQL real**.
-- Paginação por cursor ordenado por data + UUID foi codificada, ainda sem validação de desempenho/concorrência.
-- Há limite transacional por conta nas operações privadas e seed de categorias; faltam proteção contra abuso nos endpoints públicos, testes de concorrência executados, SMTP externo e revisão de acessibilidade.
-- Há tela de atualização de senha após link de recuperação; o fluxo de e-mail ainda precisa de teste real.
-- Não usar dados pessoais reais, não ativar billing ou deploy.
+## Estado atual e limites
 
-## Pré-requisitos
-Git, Node.js 24 LTS, npm 11 e, para a stack completa, Docker ou runtime compatível. O frontend isolado não precisa iniciar os contêineres Supabase, mas as jornadas que leem ou gravam dados dependem da API e do banco locais.
+| Área | Implementado | Limites |
+| --- | --- | --- |
+| Saúde | Catálogo por domínio, profissão/especialidade, filtros, perfil público e painel profissional para atributos e modalidade das ofertas existentes | Cadastro inicial Saúde pela UI e solicitação administrativa bloqueados; API rejeita request Saúde com 409. Sem agenda, prontuário ou atendimento clínico na plataforma. |
+| Serviços Gerais | Catálogo, categorias, preços, perfis, anúncios, solicitação de orçamento, propostas versionadas, aceite, acompanhamento e confirmação de conclusão | Sem pagamento real; criação de solicitação não possui idempotência no servidor. |
+| Autenticação e autorização | Supabase Auth, sessões, recuperação, perfis e verificações de token/papel/propriedade na API | Entrega de e-mail por SMTP externo ainda precisa de validação; JWT emitido pode durar até expirar após logout. |
+| Banco e segurança | Migrations ordenadas, RLS/grants, limites transacionais de escrita, snapshots, histórico e contrato único por pedido | Hardening remoto exige aplicação futura autorizada; testes desta branch usam somente banco e contas sintéticas locais. |
+| Upload | Endpoint bloqueado com 501, `UPLOAD_DISABLED_PENDING_VALIDATION` | Não enviar imagens, PDFs ou dados reais; liberação depende de revisão própria. |
 
-## Como executar localmente
+Registro profissional significa somente **“Registro informado pelo profissional”**, **“Não verificado oficialmente pela plataforma”** quando exibido. Não há certificação ou habilitação oficial validada pela plataforma. A opção técnica “Atuação geral informada” não concede título de especialista.
+
+**Aceitar proposta em Serviços Gerais registra contratação; não significa pagamento.** Não há gateway, split, cobrança ou transferência reais. Não foi integrada a branch de pagamento simulado. Atendimento Saúde, prontuário, coleta de sintomas, exames e histórico clínico permanecem fora do fluxo disponível.
+
+Cada conta tem um papel (`cliente` ou `prestador`); cliente pode descobrir ambas as áreas. No MVP, prestador tem um único domínio profissional. Cadastro público não cria administradores e não há painel administrativo.
+
+## Stack efetivamente utilizada
+
+| Camada | Tecnologia |
+| --- | --- |
+| Frontend | React 19, TypeScript, Vite 7, Tailwind CSS 4, React Router 7 |
+| Backend | Supabase Edge Functions, TypeScript/Deno, API `supabase/functions/api/index.ts` |
+| Auth e banco | Supabase Auth, PostgreSQL, migrations SQL, RLS/grants e funções transacionais |
+| Ambiente e testes | Node.js 24 LTS, npm 11, Supabase CLI 2.122.1, Docker, Node test runner, Vitest, Testing Library e Playwright |
+| Colaboração e CI | Git, GitHub Issues, revisão cruzada e GitHub Actions |
+
+Dependências diretas e lockfile estão fixados; o SDK da Edge Function usa `npm:@supabase/supabase-js@2.119.0`. Não há backend Firebase ativo. Supabase Storage/upload e hospedagem de produção não são funcionalidades habilitadas nesta entrega. A escolha histórica de arquitetura está registrada no [PR #3](https://github.com/dp-tech021/nutri-med/pull/3).
+
+## Execução local
+
+Pré-requisitos: Git, Node.js 24 LTS, npm 11 e, para banco/API, Docker disponível. `.nvmrc` registra Node 24. Não ativar faturamento nem usar banco remoto para testes.
+
 ```bash
 git clone https://github.com/dp-tech021/nutri-med.git
 cd nutri-med
 git fetch origin
-git checkout feat/nm-catalogo-perfis-por-dominio
-nvm install
-nvm use
+git checkout integration/nm-mvp-saude-servicos
 npm ci
+npm run dev
 ```
 
-Para validar e iniciar somente o frontend:
+O Vite informa a URL local, normalmente `http://127.0.0.1:5173`. Sem API/banco, a interface abre, mas as jornadas de catálogo, login e persistência não funcionam.
+
+Verificações frontend:
 
 ```bash
 npm run typecheck
 npm test
 npm run lint
 npm run build
-npm run dev
 ```
 
-Sem a stack Supabase, a interface abre, mas catálogo, autenticação e demais operações de dados não funcionam. Para executar a integração local completa:
+Para executar a stack local, a partir da mesma pasta:
 
 ```bash
-npx supabase start
+npm run db:start
 npx supabase status
 ```
-Copie `.env.example` para `.env.local` e informe a chave pública local mostrada por `npx supabase status`. Nunca use chave secret/service_role no frontend.
 
-Em terminais separados:
+Copie `.env.example` para `.env.local` e configure somente as variáveis públicas locais `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` e `VITE_API_URL`. **Nunca inserir secret/service_role, senha de banco ou token administrativo em variáveis `VITE_`, arquivos versionados, chat ou screenshots.** Não publicar a saída de status com chaves.
+
+Em dois terminais separados:
+
 ```bash
 npm run api:serve
+```
+
+```bash
 npm run dev
 ```
-Abra a URL indicada pelo Vite (geralmente localhost:5173). A API usa `verify_jwt=false` porque há catálogo público; **cada rota privada valida o token com Supabase Auth**. Não expor instância local publicamente.
 
-## Verificações
+A API usa `verify_jwt=false` porque há rotas públicas; **cada rota privada verifica o token via Supabase Auth**, além de perfil, domínio e propriedade no servidor. Não expor a stack local à internet.
+
+`ALLOWED_ORIGINS` na Edge Function é a fonte de verdade do CORS. Se o Kong da CLI local sobrescrever os headers, a adaptação opcional `python scripts/configure-local-cors.py` remove somente essa interferência. Esse script não é requisito de produção, não configura o ambiente gerenciado e não substitui a política da função. Python/PyYAML são ferramentas locais opcionais.
+
+Testes integrados, exclusivamente contra a stack local:
+
 ```bash
-npm run typecheck
-npm test
-npm run lint
-npm run build
-npx supabase db reset
+node scripts/test-security-migration.mjs
+node scripts/test-domain-migration.mjs
+node scripts/audit-local-database.mjs
+node scripts/run-local-homologation.mjs --all
 ```
-Esses comandos são instruções, **não evidência de que passaram**; cada PR deve registrar os resultados reais. O script `npm run test:integration` cria três contas sintéticas e testa o fluxo completo na stack local, mas depende do Supabase iniciado e de credenciais exclusivamente locais.
 
-### Dependências reproduzíveis
+O runner carrega as chaves do status local para o processo filho, sem imprimi-las. `npm test` sem essas chaves declara os testes HTTP ignorados; isso não prova integração aprovada. `npm run test:integration` continua disponível para os cenários integrados originais. `npm run db:reset` recria destrutivamente o banco **local**; use somente para fixtures sintéticas.
 
-As dependências diretas usam versões exatas e o `package-lock.json` registra toda a árvore resolvida. Isso torna `npm ci` previsível para os dois desenvolvedores e para a CI; atualizações passam a ser explícitas e precisam regenerar o lockfile e repetir todos os checks. Não edite o lockfile manualmente.
+Problemas de proxy, CA, DNS, espaço Docker ou healthcheck e a preparação legítima do cache npm estão documentados na seção [Hardening pré-integração](docs/homologacao-integrada.md#hardening-pré-integração). O entrypoint original foi homologado sem bundle ou configuração alternativa.
 
-A linha 2.x da CLI do Supabase foi preservada para evitar uma migração implícita para a versão 3. As versões e compatibilidades foram conferidas no [registro npm](https://www.npmjs.com/), na documentação do [Node.js](https://nodejs.org/en/about/previous-releases), do [Vite](https://vite.dev/guide/), do [Tailwind CSS](https://tailwindcss.com/docs/installation/using-vite), do [React Router](https://reactrouter.com/start/data/installation), do [Supabase](https://supabase.com/docs/guides/local-development) e do [ESLint](https://eslint.org/docs/latest/use/getting-started).
+## Evidências e pendências
 
-### Roteiro de QA obrigatório
-1. Criar cliente, prestador e terceiro sem vínculo em ambiente de teste; verificar e-mail.
-2. Prestador publica e desativa anúncio; visitante vê somente anúncios ativos.
-3. Cliente solicita; prestador envia e revisa proposta; cliente aceita termos vigentes.
-4. Prestador inicia e informa finalização; cliente confirma.
-5. Terceiro não pode ler pedido; cliente não pode editar serviço; prestador não aceita contrato por cliente.
-6. Testar versão desatualizada, dois aceites concorrentes, aceite repetido e proposta após contratação.
-7. Bloquear leitura/gravação direta na Data API por navegador.
-8. Verificar persistência após refresh e falha de upload negada.
-9. Validar recuperação de senha, SMTP externo, acessibilidade e apresentação em celular.
+A origem validada `32c6a48` teve 96 testes aprovados, sem skips, além de migrations limpas, legado, autorização, concorrência de aceite e CORS locais. Os resultados específicos após integrar a main ficam em [homologação integrada](docs/homologacao-integrada.md). Histórico útil também está em [catálogo por domínio](docs/catalogo-dominios.md), [painéis e solicitações](docs/solicitacoes-paineis-dominios.md) e [taxonomia Saúde](docs/revisao-taxonomia-saude.md).
 
-## Endpoints
-- Públicos: `GET /catalog`, `GET /services/:id`, `GET /health`.
-- Autenticados: `POST /profiles`, `GET/PATCH /me`.
-- Prestador: `POST /services`, `PATCH /services/:id`, `GET /my/services`.
-- Pedidos: `POST/GET /requests`, `GET /requests/:id`, `POST /requests/:id/actions`.
-- Ações: `enviar_proposta`, `revisar_proposta`, `recusar_pedido`, `cancelar`, `aceitar`, `recusar_proposta`, `iniciar`, `finalizar`, `confirmar`.
+Persistem: avaliação comercial/legal e privacidade antes de dados reais; SMTP externo; testes de carga; revisão manual de acessibilidade; idempotência de criação de solicitações no servidor; aviso de bundle de aproximadamente 563 kB. A migration `20261117162451_revoke_rls_auto_enable_public_execute.sql` está preparada e testada localmente, **não aplicada ao Supabase remoto por estas etapas**. Publicação e migração remota precisam de autorização separada.
 
-Valores monetários são inteiros em centavos (BRL). Condições aceitas são copiadas do banco, não do navegador.
+## Time, responsabilidades e revisão
 
-## Custo zero, colaboração e fontes
-Supabase Free possui quotas e pode pausar projetos pouco ativos. Cloudflare Pages Free pode hospedar o frontend futuramente. Nenhum recurso remoto foi criado nesta etapa. Para a dupla: uma pessoa revisa banco/API e a outra frontend/UX; PRs pequenos e revisão cruzada.
+| Conta GitHub | Responsabilidade principal |
+| --- | --- |
+| [@Id-UserDanilo](https://github.com/Id-UserDanilo) | Frontend, landing, React, formulários, UX, acessibilidade, configurações de segurança frontend e coordenação da revisão de segurança |
+| [@o-tedd](https://github.com/o-tedd) | Backend, API, PostgreSQL, migrations, autenticação/autorização no servidor, RLS, integrações, transações e testes integrados |
+| Ambos | Produto, decisões de custo/regulação, revisão cruzada e aprovação das entregas |
 
-### Teste integrado local
-```bash
-export TEST_SUPABASE_URL=http://127.0.0.1:54321
-export TEST_SUPABASE_ANON_KEY='CHAVE_PUBLICA_LOCAL'
-export TEST_SUPABASE_SERVICE_ROLE_KEY='CHAVE_SERVICE_ROLE_LOCAL_SOMENTE_NESTE_TERMINAL'
-npm run test:integration
-```
-Nunca cole a chave administrativa neste chat, em commits ou na interface web. Confirme que a URL aponta **somente** para localhost; o teste cria contas, anúncios e pedidos artificiais. Não rode contra produção.
+A UI indica estados; somente o backend autoriza acesso e transações. Segredos administrativos permanecem no servidor.
 
-Documentação oficial: https://supabase.com/docs/guides/local-development ; https://supabase.com/docs/guides/functions/auth ; https://supabase.com/docs/guides/platform/free-project-pausing
+Fluxo de colaboração: Issue → branch → implementação/testes → revisão cruzada → autorização de merge → atualização da Issue. O [processo da dupla](docs/processo-colaboracao.md) preserva os critérios de Ready/Done e o fluxo de PRs para etapas de revisão autorizadas. **Esta preparação termina com a branch publicada, sem criar PR nem fazer merge na main.** Nenhuma Issue foi fechada automaticamente.
 
-## Entrega das duas áreas — PR #56
+- [Backlog, fases e 38 Issues registradas](docs/backlog.md)
+- [Questões comerciais, operacionais e licença](docs/questoes-em-aberto.md)
+- [Todas as Issues](https://github.com/dp-tech021/nutri-med/issues)
+- [Issues de Id-UserDanilo](https://github.com/dp-tech021/nutri-med/issues?q=is%3Aissue+assignee%3AId-UserDanilo)
+- [Issues de o-tedd](https://github.com/dp-tech021/nutri-med/issues?q=is%3Aissue+assignee%3Ao-tedd)
 
-A Home distingue Saúde de Serviços Gerais e preserva `/servicos`, conta, recuperação de senha, perfis, painéis e solicitações. O contrato de domínio e os limites estão em [visão do produto](docs/visao-produto.md), o conteúdo da Home em [landing](docs/landing.md) e as próximas decisões no [backlog](docs/backlog.md). `GET /health` é apenas diagnóstico da API, não um catálogo de Saúde. O backend atual ainda não implementa `MarketplaceDomain`; nenhuma migração é incluída nesta entrega.
+Fases preservadas: F1 fundação/documentação; F2 plataforma; F3 contratação e qualidade; F4 evolução financeira futura, dependente de autorização. Decisões de categorias comerciais, regiões, critérios de elegibilidade, verificação oficial, monetização, suporte, disputas, métricas e licença continuam nas Issues. A decisão Saúde + Serviços Gerais não encerra NM-01.
 
-## Catálogo por domínio — etapa incremental
+## Histórico administrativo e custos
 
-Ver [modelo, API, recuperação e validação local](docs/catalogo-dominios.md). A entrega anterior está registrada no PR #56; este incremento parte de `63ed0ff`. Taxonomia de Saúde sem seed comercial: não há profissionais fictícios na aplicação. Registros profissionais são declarados, sem verificação oficial.
+Os PRs [#2](https://github.com/dp-tech021/nutri-med/pull/2) (escopo), [#3](https://github.com/dp-tech021/nutri-med/pull/3) (arquitetura), [#4](https://github.com/dp-tech021/nutri-med/pull/4) (primeira implementação) e [#38](https://github.com/dp-tech021/nutri-med/pull/38) (organização, backlog e templates) são referências históricas; não se presume seu status atual. A entrega das duas áreas foi evoluída após o [PR #56](https://github.com/dp-tech021/nutri-med/pull/56). O [PR #5](https://github.com/dp-tech021/nutri-med/pull/5) é referência histórica de pagamento simulado, não integrado nesta branch e sem cobrança real.
 
-## Solicitações e painéis por domínio
+**Orçamento autorizado: R$ 0.** Supabase Free, GitHub Free e eventual hospedagem gratuita têm quotas; disponibilidade, SMTP, domínio e operação comercial não são garantidos sem custo. Não ativar billing, deploy ou recursos pagos sem autorização expressa. Consultar os limites oficiais de [Supabase](https://supabase.com/docs/guides/platform/billing-on-supabase) e [GitHub](https://docs.github.com/) antes de qualquer decisão futura. Não há hospedagem de produção definida por esta preparação.
 
-Na branch incremental `feat/nm-solicitacoes-paineis-por-dominio`, Serviços Gerais mantém o orçamento e histórico. O painel de Saúde edita profissão/especialidade e modalidade das ofertas existentes; **Solicitar atendimento permanece indisponível**, sem campo clínico, até existir contrato administrativo validado. Ver [comportamento, testes e bloqueios](docs/solicitacoes-paineis-dominios.md). Nenhuma das alterações significa conclusão do MVP ou agenda/atendimento habilitados.
-
-## Taxonomia inicial e revisão do modelo profissional
-
-A taxonomia mínima de Saúde agora tem cinco profissões e a opção técnica “Atuação geral informada”, sem certificação ou verificação de habilitação. Cliente é transversal; prestador mantém um domínio profissional no MVP. Ver [revisão, contrato de publicação e resultados reais](docs/revisao-taxonomia-saude.md). Cadastro inicial e solicitações Saúde na interface continuam bloqueados.
+**Licença ainda não definida.** Um repositório público não concede automaticamente permissão geral de copiar ou redistribuir. Os colaboradores devem decidir direitos e licença na [NM-38](https://github.com/dp-tech021/nutri-med/issues/44).
