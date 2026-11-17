@@ -101,3 +101,26 @@ describe('catálogo público', () => {
     expect(mergeUniqueServices([], [service, service]).map((item) => item.id)).toEqual(['service-1']);
   });
 });
+
+it('Saúde consulta taxonomia, filtros e próximas páginas com domain=health', async () => {
+  apiMock.mockImplementation(async (path) => {
+    if (path === '/health-taxonomy') return {professions:[{slug:'qa-prof',label:'Profissão QA'}],specialties:[{profession:'qa-prof',slug:'qa-esp',label:'Especialidade QA'}]};
+    return {items:[{...service,id:'health-qa',domain:'health',profession:'qa-prof',specialty:'qa-esp',title:'Oferta de Saúde sintética'}],next_cursor:String(path).includes('cursor=')?null:'health-cursor'};
+  });
+  const user=userEvent.setup();
+  render(<AppContext.Provider value={{session:null,profile:null,refresh:async()=>undefined}}><MemoryRouter><CatalogPage domain="health" /></MemoryRouter></AppContext.Provider>);
+  expect(await screen.findByRole('heading',{name:'Oferta de Saúde sintética'})).toBeVisible();
+  expect(screen.queryByLabelText('Categoria')).not.toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText('Profissão'),'qa-prof');
+  await user.selectOptions(screen.getByLabelText('Especialidade'),'qa-esp');
+  await user.type(screen.getByLabelText('Cidade'),'Recife');
+  await user.selectOptions(screen.getByLabelText('Modalidade'),'online');
+  await user.type(screen.getByLabelText('Buscar'),'oferta');
+  await user.click(screen.getByRole('button',{name:'Buscar'}));
+  await waitFor(()=>expect(apiMock.mock.calls.some(([path])=>String(path).includes('domain=health')&&String(path).includes('profession=qa-prof')&&String(path).includes('specialty=qa-esp')&&String(path).includes('city=Recife')&&String(path).includes('modality=online')&&String(path).includes('q=oferta'))).toBe(true));
+  await user.click(screen.getByRole('button',{name:'Carregar mais ofertas'}));
+  await waitFor(()=>expect(apiMock.mock.calls.some(([path])=>String(path).includes('cursor=health-cursor')&&String(path).includes('domain=health')&&String(path).includes('profession=qa-prof'))).toBe(true));
+  expect(screen.queryByText('Sob orçamento')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button',{name:'Limpar filtros'}));
+  expect(screen.getByLabelText('Profissão')).toHaveValue('');
+});

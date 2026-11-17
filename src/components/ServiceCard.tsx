@@ -16,7 +16,7 @@ export function ServiceCard({ service }: { service: Service }) {
     </div>
     <div className="service-card__body">
       <div className="service-card__tags">
-        <span>{readableLabel(service.category, 'Sem categoria')}</span>
+        <span>{readableLabel(service.domain === 'health' ? service.profession : service.category, 'Sem categoria')}</span>
         <span>{readableLabel(service.modality, 'Modalidade não informada')}</span>
       </div>
       <h2>{service.title}</h2>
@@ -24,7 +24,7 @@ export function ServiceCard({ service }: { service: Service }) {
       <p className="service-card__location">{service.city || 'Cidade não informada'}</p>
       <p className="service-card__description">{service.description}</p>
       <div className="service-card__footer">
-        <p className="service-price"><span>{price.label}</span><strong>{price.value}</strong></p>
+        {service.domain === 'health' ? <p>{readableLabel(service.specialty, '')}</p> : <p className="service-price"><span>{price.label}</span><strong>{price.value}</strong></p>}
         <Link className="service-card__link" to={`/servico/${service.id}`} aria-label={`Ver detalhes de ${service.title}`}>Ver detalhes <span aria-hidden="true">→</span></Link>
       </div>
     </div>

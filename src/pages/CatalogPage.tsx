@@ -1,18 +1,22 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import type { MarketplaceDomain } from '../marketplace';
 import { api, type Service } from '../api';
 import { Layout } from '../components/Layout';
 import { ServiceCard } from '../components/ServiceCard';
 import { Alert, Button, EmptyState, ErrorState, Field, Input, LoadingState, Select } from '../components/ui';
 import { errorMessage } from '../utils/errors';
 
-export type CatalogFilters = { category: string; city: string; term: string; searchIn: 'service' | 'provider'; modality: string };
+export type CatalogFilters = { category: string; city: string; term: string; searchIn: 'service' | 'provider'; modality: string; profession?: string; specialty?: string };
 type CatalogResponse = { items: Service[]; next_cursor: string | null };
 type Category = { slug: string; label: string };
 
 export const emptyFilters: CatalogFilters = { category: '', city: '', term: '', searchIn: 'service', modality: '' };
 
-export function catalogParams(filters: CatalogFilters, cursor?: string) {
+export function catalogParams(filters: CatalogFilters, cursor?: string, domain: MarketplaceDomain = 'services') {
   const params = new URLSearchParams({ limit: '12' });
+  if (domain === 'health') params.set('domain', domain);
+  if (domain === 'health' && filters.profession) params.set('profession', filters.profession);
+  if (domain === 'health' && filters.specialty) params.set('specialty', filters.specialty);
   if (cursor) params.set('cursor', cursor);
   if (filters.category) params.set('category', filters.category);
   if (filters.city) params.set('city', filters.city);
@@ -33,7 +37,9 @@ export function mergeUniqueServices(current: Service[], incoming: Service[]) {
   })];
 }
 
-export function CatalogPage() {
+export function CatalogPage({ domain = 'services' }: { domain?: MarketplaceDomain }) {
+  const health = domain === 'health';
+  const [taxonomy, setTaxonomy] = useState<{ professions: Category[]; specialties: (Category & { profession: string })[] }>({professions: [], specialties: []});
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryError, setCategoryError] = useState('');
   const [items, setItems] = useState<Service[]>([]);
@@ -49,13 +55,13 @@ export function CatalogPage() {
   useEffect(() => {
     const controller = new AbortController();
     setCategoryError('');
-    void api<Category[]>('/categories', 'GET', undefined, undefined, controller.signal)
-      .then(setCategories)
+    void api<Category[] | typeof taxonomy>(health ? '/health-taxonomy' : '/categories', 'GET', undefined, undefined, controller.signal)
+      .then((data) => { if (Array.isArray(data)) setCategories(data); else setTaxonomy(data); })
       .catch((requestError) => {
         if (!controller.signal.aborted) setCategoryError(errorMessage(requestError));
       });
     return () => controller.abort();
-  }, []);
+  }, [health]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -65,7 +71,7 @@ export function CatalogPage() {
     setError('');
     setItems([]);
     setCursor(null);
-    void api<CatalogResponse>(`/catalog?${catalogParams(filters)}`, 'GET', undefined, undefined, controller.signal)
+    void api<CatalogResponse>(`/catalog?${catalogParams(filters, undefined, domain)}`, 'GET', undefined, undefined, controller.signal)
       .then((response) => {
         if (version === requestVersion.current) {
           setItems(mergeUniqueServices([], response.items));
@@ -79,7 +85,7 @@ export function CatalogPage() {
         if (version === requestVersion.current) setLoading(false);
       });
     return () => controller.abort();
-  }, [filters, requestKey]);
+  }, [filters, requestKey, domain]);
 
   async function more() {
     if (!cursor || loadingMore) return;
@@ -88,7 +94,7 @@ export function CatalogPage() {
     setLoadingMore(true);
     setError('');
     try {
-      const response = await api<CatalogResponse>(`/catalog?${catalogParams(filters, currentCursor)}`);
+      const response = await api<CatalogResponse>(`/catalog?${catalogParams(filters, currentCursor, domain)}`);
       if (version === requestVersion.current) {
         setItems((current) => mergeUniqueServices(current, response.items));
         setCursor(response.next_cursor);
@@ -114,26 +120,35 @@ export function CatalogPage() {
   return <Layout>
     <header className="catalog-heading">
       <p className="eyebrow">Catálogo público</p>
-      <h1>Encontre serviços</h1>
-      <p>Busque pelo início do nome de um serviço ou prestador e solicite um orçamento antes de decidir.</p>
+      <h1>{health ? 'Encontre profissionais de Saúde' : 'Encontre serviços'}</h1>
+      <p>{health ? 'Descubra profissionais por profissão, especialidade, cidade e modalidade. Não envie informações clínicas. Não há agendamento ou atendimento pela plataforma.' : 'Busque pelo início do nome de um serviço ou prestador e solicite um orçamento antes de decidir.'}</p>
     </header>
 
     <form className="catalog-filters" onSubmit={submit} aria-label="Filtros do catálogo">
       <Field label="Buscar" htmlFor="catalog-term" hint="A busca encontra nomes que começam com o texto digitado.">
-        <Input id="catalog-term" value={draft.term} minLength={2} maxLength={60} onChange={(event) => setDraft({ ...draft, term: event.target.value })} placeholder="Ex.: limp" />
+        <Input id="catalog-term" value={draft.term} minLength={2} maxLength={60} onChange={(event) => setDraft({ ...draft, term: event.target.value })} placeholder={health ? 'Ex.: nome' : 'Ex.: limp'} />
       </Field>
       <Field label="Buscar por" htmlFor="catalog-search-in">
         <Select id="catalog-search-in" value={draft.searchIn} onChange={(event) => setDraft({ ...draft, searchIn: event.target.value as CatalogFilters['searchIn'] })}>
-          <option value="service">Serviço</option>
-          <option value="provider">Prestador</option>
+          <option value="service">{health ? 'Oferta' : 'Serviço'}</option>
+          <option value="provider">{health ? 'Profissional' : 'Prestador'}</option>
         </Select>
       </Field>
-      <Field label="Categoria" htmlFor="catalog-category">
+      {!health && <Field label="Categoria" htmlFor="catalog-category">
         <Select id="catalog-category" value={draft.category} onChange={(event) => setDraft({ ...draft, category: event.target.value })}>
           <option value="">Todas as categorias</option>
           {categories.map((item) => <option key={item.slug} value={item.slug}>{item.label}</option>)}
         </Select>
       </Field>
+      }
+      {health && <>
+        <Field label="Profissão" htmlFor="catalog-profession"><Select disabled={Boolean(categoryError)} id="catalog-profession" value={draft.profession || ''} onChange={e => setDraft({...draft, profession:e.target.value, specialty:''})}>
+          <option value="">Todas as profissões</option>{taxonomy.professions.map(p => <option key={p.slug} value={p.slug}>{p.label}</option>)}
+        </Select></Field>
+        <Field label="Especialidade" htmlFor="catalog-specialty"><Select disabled={Boolean(categoryError)} id="catalog-specialty" value={draft.specialty || ''} onChange={e => setDraft({...draft,specialty:e.target.value})}>
+          <option value="">Todas as especialidades</option>{taxonomy.specialties.filter(p => !draft.profession || p.profession === draft.profession).map(p => <option key={`${p.profession}-${p.slug}`} value={p.slug}>{p.label}</option>)}
+        </Select></Field>
+      </>}
       <Field label="Cidade" htmlFor="catalog-city">
         <Input id="catalog-city" value={draft.city} maxLength={100} onChange={(event) => setDraft({ ...draft, city: event.target.value })} placeholder="Ex.: São Paulo" />
       </Field>
@@ -150,9 +165,9 @@ export function CatalogPage() {
       </div>
     </form>
 
-    {categoryError && <Alert variant="warning" title="Categorias indisponíveis">Você ainda pode buscar por nome, cidade e modalidade.</Alert>}
+    {categoryError && <Alert variant="warning" title={health ? 'Taxonomia de Saúde indisponível' : 'Categorias indisponíveis'}>Você ainda pode buscar por nome, cidade e modalidade.</Alert>}
     <div className="catalog-results-heading" aria-live="polite">
-      <h2>Serviços disponíveis</h2>
+      <h2>{health ? 'Ofertas de Saúde' : 'Serviços disponíveis'}</h2>
       {!loading && !error && <span>{items.length} {items.length === 1 ? 'resultado exibido' : 'resultados exibidos'}</span>}
     </div>
     {error && <ErrorState title="Não foi possível carregar o catálogo" description="Verifique sua conexão e tente novamente." onRetry={() => setRequestKey((current) => current + 1)} />}
@@ -160,7 +175,7 @@ export function CatalogPage() {
     {!loading && !error && items.length > 0 && <div className="services-grid">
       {items.map((service) => <ServiceCard key={service.id} service={service} />)}
     </div>}
-    {!loading && !error && items.length === 0 && <EmptyState title="Nenhum serviço encontrado" description="Tente limpar os filtros ou buscar pelo início de outro nome." action={<Button variant="secondary" onClick={clearFilters}>Limpar filtros</Button>} />}
-    {cursor && !loading && <div className="catalog-pagination"><Button variant="secondary" loading={loadingMore} onClick={() => void more()}>Carregar mais serviços</Button></div>}
+    {!loading && !error && items.length === 0 && <EmptyState title={health ? 'Nenhum profissional encontrado' : 'Nenhum serviço encontrado'} description="Tente limpar os filtros ou buscar pelo início de outro nome." action={<Button variant="secondary" onClick={clearFilters}>Limpar filtros</Button>} />}
+    {cursor && !loading && <div className="catalog-pagination"><Button variant="secondary" loading={loadingMore} onClick={() => void more()}>{health ? 'Carregar mais ofertas' : 'Carregar mais serviços'}</Button></div>}
   </Layout>;
 }

@@ -87,3 +87,12 @@ describe('solicitação de orçamento', () => {
     expect(await screen.findByText('Retorno: /servico/service-demo')).toBeVisible();
   });
 });
+
+it('detalhe de Saúde preserva o link público mas não oferece coleta de necessidade clínica',async()=>{
+  apiMock.mockResolvedValue({...details,service:{...details.service,domain:'health',profession:'profissao-qa',specialty:'especialidade-qa'}});
+  renderPage();
+  expect(await screen.findByRole('heading',{name:'Descoberta de profissionais'})).toBeVisible();
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button',{name:'Enviar solicitação de orçamento'})).not.toBeInTheDocument();
+  expect(screen.getByRole('link',{name:'Ver perfil e outros serviços'})).toHaveAttribute('href','/prestador/provider-demo');
+});

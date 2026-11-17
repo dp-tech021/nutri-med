@@ -25,7 +25,7 @@ try {
         const path = new URL(route.request().url()).pathname;
         const data = path.endsWith('/me') ? {
           kind: 'cliente', display_name: 'Cliente sintético com nome público longo', city: '', category: '', about: '',
-        } : path.endsWith('/categories') ? [] : { items: [], next_cursor: null };
+        } : path.endsWith('/health-taxonomy') ? {professions:[],specialties:[]} : path.endsWith('/categories') ? [] : { items: [], next_cursor: null };
         await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(data) });
       });
       const page = await context.newPage();
@@ -67,11 +67,12 @@ try {
       await page.goto(baseUrl, { waitUntil: 'networkidle' });
       await page.screenshot({ path: `${outputDirectory}/${width}-${authenticated ? 'account' : 'visitor'}-home.png`, fullPage: true });
       await page.getByRole('link', { name: 'Encontrar profissional', exact: true }).click();
-      await page.getByRole('heading', { name: 'Catálogo de Saúde em preparação' }).waitFor();
+      await page.getByRole('heading', { name: 'Encontre profissionais de Saúde' }).waitFor();
       assert.equal(await page.evaluate(() => scrollY), 0, 'Route navigation starts at the top');
       assert.equal(new URL(page.url()).pathname, '/saude');
-      assert.equal(await page.getByRole('combobox').count(), 0);
-      assert.equal(await page.getByRole('textbox').count(), 0);
+      assert.equal(await page.getByLabel('Profissão', {exact:true}).count(), 1);
+      assert.equal(await page.getByLabel('Especialidade', {exact:true}).count(), 1);
+      await page.getByText('Nenhum profissional encontrado', {exact:true}).waitFor();
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth), false);
       await page.screenshot({ path: `${outputDirectory}/${width}-${authenticated ? 'account' : 'visitor'}-health.png`, fullPage: true });
       await page.goto(baseUrl, { waitUntil: 'networkidle' });

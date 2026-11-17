@@ -13,7 +13,7 @@ vi.mock('../api', async (importOriginal) => ({
 const apiMock = vi.mocked(api);
 beforeEach(() => {
   apiMock.mockReset();
-  apiMock.mockImplementation(async (path) => path === '/categories' ? [] : {
+  apiMock.mockImplementation(async (path) => path === '/health-taxonomy' ? {professions:[],specialties:[]} : path === '/categories' ? [] : {
     items: [{ id: 'legacy-demo', title: 'Serviço sintético legado', description: 'Exemplo de teste',
       category: 'limpeza', city: 'Cidade Demo', modality: 'presencial', price_type: 'orcamento', price_cents: null }],
     next_cursor: null,
@@ -49,7 +49,7 @@ describe('proteção de rotas', () => {
 
 describe('áreas do marketplace', () => {
   it.each([
-    ['Encontrar profissional', '/saude', 'Saúde'],
+    ['Encontrar profissional', '/saude', 'Encontre profissionais de Saúde'],
     ['Encontrar serviço', '/servicos', 'Encontre serviços'],
   ])('navega pelo CTA %s no roteador real', async (label, path, heading) => {
     const user = userEvent.setup();
@@ -60,9 +60,9 @@ describe('áreas do marketplace', () => {
     expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeVisible();
     expect(screen.getByLabelText('localização')).toHaveTextContent(`"pathname":"${path}"`);
     if (path === '/saude') {
-      expect(screen.getByText('Catálogo de Saúde em preparação')).toBeVisible();
-      expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-      expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+      expect(screen.getByLabelText('Profissão')).toBeVisible();
+      expect(screen.getByLabelText('Especialidade')).toBeVisible();
+      expect(apiMock.mock.calls.some(([url]) => String(url).includes('domain=health'))).toBe(true);
     } else {
       expect(await screen.findByRole('heading', { name: 'Serviço sintético legado' })).toBeVisible();
       expect(apiMock.mock.calls.some(([url]) => String(url).startsWith('/catalog?limit=12'))).toBe(true);

@@ -37,7 +37,7 @@ export function AppRoutes() {
   return <Routes>
     <Route path="/" element={<HomePage />} />
     <Route path="/saude" element={<HealthPage />} />
-    <Route path="/servicos" element={<CatalogPage />} />
+    <Route path="/servicos" element={<CatalogPage key="services" domain="services" />} />
     <Route path="/login" element={session
       ? <Navigate to={safeInternalPath((location.state as { from?: unknown } | null)?.from)} replace />
       : <AuthPage mode="login" />} />

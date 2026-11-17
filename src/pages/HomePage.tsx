@@ -54,7 +54,7 @@ export function HomePage() {
       <div className="hero-copy">
         <p className="eyebrow">Saúde e serviços gerais</p>
         <h1 id="hero-title">Saúde e Serviços Gerais em uma só aplicação.</h1>
-        <p className="hero-subtitle">Escolha a área que combina com sua necessidade. Explore Serviços Gerais ou conheça a proposta da área de Saúde, ainda em preparação.</p>
+        <p className="hero-subtitle">Escolha a área que combina com sua necessidade. Explore Serviços Gerais ou busque profissionais na área de Saúde.</p>
         <div className="hero-actions">
           <LinkButton to="/servicos">Explorar serviços <span aria-hidden="true">→</span></LinkButton>
           <LinkButton to="/#como-funciona" variant="secondary">Como funciona</LinkButton>
@@ -65,14 +65,14 @@ export function HomePage() {
     </section>
 
     <section className="landing-section audience-grid" aria-label="Áreas do Nutri-Med">
-      <Card className="audience-card"><h2>Saúde</h2><p>Conheça a área de Saúde. O catálogo de profissionais ainda não está disponível.</p><LinkButton to="/saude">Encontrar profissional</LinkButton></Card>
+      <Card className="audience-card"><h2>Saúde</h2><p>Busque por profissão, especialidade, cidade e modalidade. Registros profissionais são informados pelos próprios prestadores.</p><LinkButton to="/saude">Encontrar profissional</LinkButton></Card>
       <Card className="audience-card"><h2>Serviços Gerais</h2><p>Explore os serviços publicados, consulte as condições e solicite um orçamento.</p><LinkButton to="/servicos">Encontrar serviço</LinkButton></Card>
     </section>
     <section id="como-funciona" className="landing-section how-it-works" aria-labelledby="how-title">
       <div className="section-heading">
         <p className="eyebrow">Como funciona</p>
         <h2 id="how-title">Em Serviços Gerais: do pedido à conclusão</h2>
-        <p>Este fluxo é do catálogo de Serviços Gerais. A jornada de Saúde ainda será definida; não há agendamento ou solicitação de atendimento disponível.</p>
+        <p>Este fluxo é do catálogo de Serviços Gerais. Em Saúde, a descoberta está disponível; não há agendamento ou solicitação de atendimento.</p>
       </div>
       <ol className="steps-grid">
         {steps.map((step) => <li key={step.number}>
@@ -93,14 +93,14 @@ export function HomePage() {
           <span className="audience-icon" aria-hidden="true">⌕</span>
           <p className="eyebrow">Para clientes</p>
           <h3>Escolha a área de que precisa</h3>
-          <p>Em Serviços Gerais, consulte anúncios e peça propostas. Em Saúde, conheça o que está em preparação.</p>
+          <p>Em Serviços Gerais, consulte anúncios e peça propostas. Em Saúde, descubra profissionais e consulte seus perfis.</p>
           <LinkButton to="/servicos">Explorar serviços</LinkButton>
         </Card>
         <Card className="audience-card audience-card--provider">
           <span className="audience-icon" aria-hidden="true">＋</span>
           <p className="eyebrow">Para prestadores</p>
           <h3>Apresente seu trabalho e responda pedidos</h3>
-          <p>Crie uma conta de prestador para publicar em Serviços Gerais e responder com escopo, prazo e valor. A publicação em Saúde ainda não está disponível.</p>
+          <p>Crie uma conta de prestador para publicar em Serviços Gerais e responder com escopo, prazo e valor. O cadastro de ofertas em Saúde depende da configuração profissional pela API; este formulário atende Serviços Gerais.</p>
           <LinkButton to="/cadastro?tipo=prestador" variant="secondary">Criar conta de prestador</LinkButton>
         </Card>
       </div>

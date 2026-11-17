@@ -1,3 +1,4 @@
+import type { DomainAttributes } from './marketplace';
 import { createClient, type Session } from '@supabase/supabase-js';
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL || 'http://127.0.0.1:54321',
@@ -27,7 +28,7 @@ export async function api<T = unknown>(path: string, method = 'GET', body?: unkn
 }
 export type ServicePriceType = 'fixo' | 'inicial' | 'orcamento';
 export type ServiceModality = 'online' | 'presencial';
-export type Service = { id:string; title:string;description:string;category:string;city:string;modality:ServiceModality;price_type:ServicePriceType;price_cents:number|null;provider_name?:string;active?:boolean };
+export type Service = DomainAttributes & { id:string; title:string;description:string;category:string;city:string;modality:ServiceModality;price_type:ServicePriceType;price_cents:number|null;provider_name?:string;active?:boolean };
 export type RequestItem = {
   id: string; snapshot_title: string; snapshot_description?: string; snapshot_category?: string | null;
   snapshot_city?: string | null; snapshot_modality?: string | null; snapshot_price_type?: string | null;

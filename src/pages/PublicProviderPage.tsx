@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import type { DomainAttributes } from '../marketplace';
 import { api, type Service } from '../api';
 import { Layout } from '../components/Layout';
 import { readableLabel, ServiceCard } from '../components/ServiceCard';
@@ -7,7 +8,8 @@ import { Breadcrumbs, EmptyState, ErrorState, LoadingState } from '../components
 import { errorMessage } from '../utils/errors';
 
 type ProviderView = {
-  provider: { display_name: string; about: string; city: string; category: string };
+  modalities?: string[];
+  provider: DomainAttributes & { display_name: string; about: string; city: string; category: string };
   services: Service[];
 };
 
@@ -31,7 +33,7 @@ export function PublicProviderPage() {
 
   const initial = data?.provider.display_name.trim().charAt(0).toLocaleUpperCase('pt-BR') || 'P';
   return <Layout>
-    <Breadcrumbs items={[{ label: 'Serviços', to: '/servicos' }, { label: data?.provider.display_name || 'Perfil do prestador' }]} />
+    <Breadcrumbs items={[{ label: data?.provider.domain === 'health' ? 'Saúde' : 'Serviços', to: data?.provider.domain === 'health' ? '/saude' : '/servicos' }, { label: data?.provider.display_name || 'Perfil do prestador' }]} />
     {error && <ErrorState title="Não foi possível carregar o perfil" description="O perfil pode estar indisponível ou sua conexão pode ter sido interrompida." onRetry={() => setRequestKey((current) => current + 1)} />}
     {!data && !error && <LoadingState label="Carregando perfil do prestador..." />}
     {data && <>
@@ -43,6 +45,13 @@ export function PublicProviderPage() {
           <p className="provider-header__meta">{data.provider.city || 'Cidade não informada'}{data.provider.category ? ` · ${readableLabel(data.provider.category, '')}` : ''}</p>
         </div>
       </header>
+      {data.provider.domain === 'health' && <section aria-label="Informações profissionais">
+        <p>Profissão: {readableLabel(data.provider.profession, '')}</p>
+        <p>Especialidade: {readableLabel(data.provider.specialty, '')}</p>
+        <p>Modalidades: {data.modalities?.map(m => readableLabel(m, '')).join(', ') || 'Não informadas'}</p>
+        {data.provider.registration_reported && <p>Registro informado pelo profissional: {data.provider.registration_reported.council} {data.provider.registration_reported.number} — {data.provider.registration_reported.jurisdiction}. Não foi realizada verificação oficial pela plataforma.</p>}
+        <p>Não envie sintomas, exames ou informações clínicas. Agendamento e atendimento não estão disponíveis na plataforma.</p>
+      </section>}
       <section className="provider-about" aria-labelledby="provider-about-title">
         <h2 id="provider-about-title">Apresentação</h2>
         <p>{data.provider.about || 'Este prestador ainda não adicionou uma apresentação pública.'}</p>

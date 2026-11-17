@@ -1,3 +1,4 @@
+import { marketplaceDomain, validateDomainFilters, publicMarketplaceProfile as publicProfile } from '../_shared/marketplace.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const url = Deno.env.get('SUPABASE_URL') ?? '';
@@ -77,17 +78,47 @@ async function ownedRequest(requestId: string, uid: string) {
 function textPrefix(s: string) {
   return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
 }
+const publicProfileFields = 'user_id,display_name,city,about,category,domain,profession,specialty,registration_council,registration_number,registration_jurisdiction,registration_public';
+function domainValue(value: unknown) {
+  try { return marketplaceDomain(value); } catch { return bad(400, 'INVALID_DOMAIN'); }
+}
+function domainProfile(p: Payload, domain: string) {
+  const fields = ['profession', 'specialty', 'registration_council', 'registration_number', 'registration_jurisdiction', 'registration_public'];
+  if (domain !== 'health') {
+    if (fields.some(k => k in p)) bad(400, 'DOMAIN_FIELD_MISMATCH');
+    return {};
+  }
+  if ('category' in p && p.category !== '') bad(400, 'DOMAIN_FIELD_MISMATCH');
+  const attributes: Payload = { profession: getString(p, 'profession', 2, 40), specialty: getString(p, 'specialty', 2, 40), category: '', registration_council:null, registration_number:null, registration_jurisdiction:null };
+  if (fields.slice(2, 5).some(k => p[k] != null)) {
+    attributes.registration_council = getString(p, 'registration_council', 2, 30);
+    attributes.registration_number = getString(p, 'registration_number', 1, 40);
+    attributes.registration_jurisdiction = getString(p, 'registration_jurisdiction', 2, 40);
+  }
+  if ('registration_public' in p && typeof p.registration_public !== 'boolean') bad(400, 'INVALID_REGISTRATION_PUBLIC');
+  attributes.registration_public = p.registration_public === true;
+  return attributes;
+}
 async function handle(req: Request) {
   const path = new URL(req.url).pathname.split('/api').slice(-1)[0] || '/';
   const parts = path.split('/').filter(Boolean);
   const method = req.method;
   if (method === 'GET' && path === '/health') return reply({ok:true});
+  if (method === 'GET' && path === '/health-taxonomy') {
+    const { data: professions, error: e1 } = await db.from('health_professions').select('slug,label').order('label'); check(e1);
+    const { data: specialties, error: e2 } = await db.from('health_specialties').select('profession,slug,label').order('label'); check(e2);
+    return reply({ professions, specialties });
+  }
   if (method === 'GET' && path === '/categories') {
+    const domain = domainValue(new URL(req.url).searchParams.get('domain') ?? 'services');
+    if (domain !== 'services') bad(400, 'USE_HEALTH_TAXONOMY');
     const {data,error}=await db.from('categories').select('slug,label').order('label',{ascending:true});
     check(error); return reply(data);
   }
   if (method === 'GET' && path === '/catalog') {
     const query = new URL(req.url).searchParams;
+    let domain: 'health' | 'services';
+    try { domain = validateDomainFilters(query); } catch (e) { return bad(400, (e as Error).message); }
     const limitRaw = query.get('limit') || '20';
     if(!/^\d{1,2}$/.test(limitRaw)) bad(400,'INVALID_LIMIT');
     const size = int(Number(limitRaw),1,50);
@@ -98,10 +129,14 @@ async function handle(req: Request) {
     if(!['service','provider'].includes(where))bad(400,'INVALID_SEARCH_FIELD');
     const modal=query.get('modality');
     if(modal&&!['online','presencial'].includes(modal))bad(400,'INVALID_MODALITY');
-    let qry = db.from('services').select('id,title,description,category,city,modality,price_type,price_cents,created_at,profiles!inner(display_name,search_name)').eq('active',true);
+    let qry = db.from('services').select('id,title,description,category,city,modality,price_type,price_cents,created_at,domain,profiles:profiles!services_owner_domain_fk!inner(display_name,search_name,domain,profession,specialty)').eq('domain',domain).eq('profiles.domain',domain).eq('active',true);
     for(const [input,column] of [['category','search_category'],['city','search_city']] as const){
       const value=query.get(input);
       if(value){if(value.length>100)bad(400,'INVALID_FILTER');qry=qry.eq(column,normal(value));}
+    }
+    for (const field of ['profession','specialty'] as const) {
+      const value = query.get(field);
+      if (value) qry = qry.eq(`profiles.${field}`, value);
     }
     if(modal)qry=qry.eq('modality',modal);
     if(qRaw) {
@@ -114,6 +149,7 @@ async function handle(req: Request) {
         const parsed=JSON.parse(atob(cursor));
         if(typeof parsed?.at!=='string'||!/^\d{4}-\d{2}-\d{2}T/.test(parsed.at)||typeof parsed?.id!=='string')bad(400,'INVALID_CURSOR');
         id(parsed.id);
+        if ((parsed.domain ?? 'services') !== domain) bad(400, 'INVALID_CURSOR');
         const time=new Date(parsed.at).toISOString();
         // Double ordering: creation timestamp then UUID as deterministic tiebreaker.
         qry=qry.or(`created_at.lt.${time},and(created_at.eq.${time},id.lt.${parsed.id})`);
@@ -125,63 +161,76 @@ async function handle(req: Request) {
     const hasMore=rows.length>size;
     const page=rows.slice(0,size);
     const last=page.at(-1);
-    const next_cursor=hasMore&&last?btoa(JSON.stringify({at:last.created_at,id:last.id})):null;
+    const next_cursor=hasMore&&last?btoa(JSON.stringify({at:last.created_at,id:last.id,domain})):null;
     const items=page.map((x:Record<string,unknown>)=>({id:x.id,title:x.title,description:x.description,
+      domain:x.domain, ...(x.domain === 'health' ? { profession:(x.profiles as Payload)?.profession, specialty:(x.profiles as Payload)?.specialty } : {}),
       category:x.category,city:x.city,modality:x.modality,price_type:x.price_type,price_cents:x.price_cents,
       provider_name:(x.profiles as {display_name:string})?.display_name}));
     return reply({items,next_cursor,limit:size});
   }
   if (method === 'GET' && parts[0] === 'services' && parts[1]) {
-    const {data,error}=await db.from('services').select('id,title,description,category,city,modality,price_type,price_cents,owner_id').eq('id',id(parts[1])).eq('active',true).maybeSingle();check(error);
+    const {data,error}=await db.from('services').select('id,title,description,category,city,modality,price_type,price_cents,owner_id,domain').eq('id',id(parts[1])).eq('active',true).maybeSingle();check(error);
     if (!data) bad(404,'NOT_FOUND');
-    const {data:p}=await db.from('profiles').select('user_id,display_name,city,about,category').eq('user_id',data.owner_id).single();
-    return reply({service:{...data,owner_id:undefined},provider:p});
+    const requestedDomain = new URL(req.url).searchParams.get('domain');
+    if (requestedDomain !== null && domainValue(requestedDomain) !== data.domain) bad(404,'NOT_FOUND');
+    const {data:p}=await db.from('profiles').select(publicProfileFields).eq('user_id',data.owner_id).single();
+    if (!p) bad(404,'PROVIDER_NOT_FOUND');
+    return reply({service:{...data,owner_id:undefined,...(data.domain === 'health' ? {profession:p.profession,specialty:p.specialty} : {})},provider:publicProfile(p)});
   }
   if (method === 'GET' && parts[0] === 'providers' && parts[1]) {
     const providerId=id(parts[1]);
-    const {data:p,error:pe}=await db.from('profiles').select('display_name,city,category,about').eq('user_id',providerId).eq('kind','prestador').maybeSingle();
+    const {data:p,error:pe}=await db.from('profiles').select(publicProfileFields).eq('user_id',providerId).eq('kind','prestador').maybeSingle();
     check(pe);
     if(!p)bad(404,'PROVIDER_NOT_FOUND');
+    const requestedDomain = new URL(req.url).searchParams.get('domain');
+    if (requestedDomain !== null && domainValue(requestedDomain) !== p.domain) bad(404,'PROVIDER_NOT_FOUND');
     const {data:services,error:se}=await db.from('services')
-      .select('id,title,description,category,city,modality,price_type,price_cents')
-      .eq('owner_id',providerId).eq('active',true).order('created_at',{ascending:false}).limit(30);
+      .select('id,title,description,category,city,modality,price_type,price_cents,domain')
+      .eq('owner_id',providerId).eq('domain',p.domain).eq('active',true).order('created_at',{ascending:false}).limit(30);
     check(se);
-    return reply({provider:p,services});
+    return reply({provider:publicProfile(p),services:(services ?? []).map(s => ({...s,...(p.domain === 'health' ? {profession:p.profession,specialty:p.specialty} : {})})),modalities:[...new Set((services ?? []).map(s=>s.modality))]});
   }
   if (method === 'POST' && path === '/profiles') {
     const u=await actor(req); await limitWrite(u.id,'profile_create',10); const p=await parseBody(req);
-    whitelist(p,['kind','display_name','city','category','about']);
+    whitelist(p,['kind','display_name','city','category','about','domain','profession','specialty','registration_council','registration_number','registration_jurisdiction','registration_public']);
+    const domain = domainValue(p.domain ?? 'services');
+    const attributes = domainProfile(p,domain);
+    if (domain === 'health' && p.kind !== 'prestador') bad(400,'HEALTH_PROVIDER_REQUIRED');
     const kind=getString(p,'kind',1,20);
     if(!['cliente','prestador'].includes(kind)) bad(400,'INVALID_ROLE');
-    const record={user_id:u.id,kind,display_name:getString(p,'display_name',2,100),city:typeof p.city==='string'?getString(p,'city',0,100):'',category:typeof p.category==='string'?getString(p,'category',0,100):'',about:typeof p.about==='string'?getString(p,'about',0,1000):''};
+    const record={user_id:u.id,kind,domain,...attributes,display_name:getString(p,'display_name',2,100),city:typeof p.city==='string'?getString(p,'city',0,100):'',category:typeof p.category==='string'?getString(p,'category',0,100):'',about:typeof p.about==='string'?getString(p,'about',0,1000):''};
     // INSERT ... ON CONFLICT DO NOTHING evita duplicar o perfil em cadastros concorrentes.
     const {error:writeError}=await db.from('profiles').upsert(record,{onConflict:'user_id',ignoreDuplicates:true});
     check(writeError);
     const {data:stored,error:readError}=await db.from('profiles').select('*').eq('user_id',u.id).single();
     check(readError);
     if(stored.kind!==kind)bad(409,'ROLE_IMMUTABLE');
+    if(stored.domain!==domain)bad(409,'DOMAIN_IMMUTABLE');
     return reply(stored,201);
   }
   if(method==='GET' && path==='/me') {
     const u=await actor(req); return reply(await profile(u.id));
   }
   if(method==='PATCH' && path==='/me') {
-    const u=await actor(req); await profile(u.id);await limitWrite(u.id,'profile_update',30);const p=await parseBody(req);
-    whitelist(p,['display_name','city','category','about']);
+    const u=await actor(req); const oldProfile=await profile(u.id);await limitWrite(u.id,'profile_update',30);const p=await parseBody(req);
+    whitelist(p,['display_name','city','category','about','profession','specialty','registration_council','registration_number','registration_jurisdiction','registration_public']);
     if(!Object.keys(p).length)bad(400,'EMPTY_UPDATE');
-    const changes:Payload={};
+    const changes:Payload={...domainProfile(oldProfile.domain === 'health' ? {...oldProfile,...p} : p,oldProfile.domain)};
     for(const [k,max] of [['display_name',100],['city',100],['category',100],['about',1000]] as const)
       if(k in p) changes[k]=getString(p,k,k==='display_name'?2:0,max);
     const {data,error}=await db.from('profiles').update(changes).eq('user_id',u.id).select().single();check(error);return reply(data);
   }
   if(method==='POST' && path==='/services') {
-    const {user}=await role(req,'prestador');await limitWrite(user.id,'service_create',30);const p=await parseBody(req);
-    whitelist(p,['title','description','category','city','modality','price_type','price_cents']);
+    const {user,p:owner}=await role(req,'prestador');await limitWrite(user.id,'service_create',30);const p=await parseBody(req);
+    whitelist(p,['title','description','category','city','modality','price_type','price_cents','domain']);
+    const domain=domainValue(p.domain ?? 'services');
+    if(domain!==owner.domain)bad(400,'OWNER_DOMAIN_MISMATCH');
+    if(domain==='health' && (p.category!=='outros'||p.price_type!=='orcamento'||p.price_cents!=null))bad(400,'HEALTH_LISTING_SHAPE');
     const kind=getString(p,'price_type',3,20),modality=getString(p,'modality',2,20);
     if(!['fixo','inicial','orcamento'].includes(kind)||!['online','presencial'].includes(modality))bad(400,'INVALID_ENUM');
     const price=kind==='orcamento'?null:int(p.price_cents);
     if(kind==='orcamento'&&p.price_cents!=null)bad(400,'PRICE_NOT_ALLOWED');
-    const {data,error}=await db.from('services').insert({owner_id:user.id,title:getString(p,'title',3,120),description:getString(p,'description',10,2000),category:getString(p,'category',2,80),city:getString(p,'city',2,100),modality,price_type:kind,price_cents:price}).select().single();check(error);return reply(data,201);
+    const {data,error}=await db.from('services').insert({owner_id:user.id,domain,title:getString(p,'title',3,120),description:getString(p,'description',10,2000),category:getString(p,'category',2,80),city:getString(p,'city',2,100),modality,price_type:kind,price_cents:price}).select().single();check(error);return reply(data,201);
   }
   if(method==='GET'&&path==='/my/services'){
     const {user}=await role(req,'prestador',false);
@@ -215,6 +264,7 @@ async function handle(req: Request) {
   if(method==='POST'&&path==='/requests'){
     const {user}=await role(req,'cliente');await limitWrite(user.id,'request_create',15);const p=await parseBody(req);whitelist(p,['service_id','need','desired_date']);
     const sid=id(String(p.service_id));const {data:s,error:e}=await db.from('services').select('*').eq('id',sid).eq('active',true).maybeSingle();check(e);if(!s)bad(404,'SERVICE_NOT_FOUND');
+    if(s.domain==='health')bad(409,'HEALTH_REQUESTS_UNAVAILABLE');
     if(s.owner_id===user.id)bad(403,'SELF_REQUEST');
     const date=p.desired_date==null?null:getString(p,'desired_date',10,10);
     if(date&&!/^\d{4}-\d{2}-\d{2}$/.test(date))bad(400,'INVALID_DATE');

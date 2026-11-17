@@ -91,7 +91,7 @@ export function ServiceDetailsPage() {
   }
 
   return <Layout>
-    <Breadcrumbs items={[{ label: 'Serviços', to: '/servicos' }, { label: item?.service.title || 'Detalhes' }]} />
+    <Breadcrumbs items={[{ label: item?.service.domain === 'health' ? 'Saúde' : 'Serviços', to: item?.service.domain === 'health' ? '/saude' : '/servicos' }, { label: item?.service.title || 'Detalhes' }]} />
     {loadError && <ErrorState title="Não foi possível carregar o serviço" description="O serviço pode estar indisponível ou sua conexão pode ter sido interrompida." onRetry={() => setRequestKey((current) => current + 1)} />}
     {!item && !loadError && <LoadingState label="Carregando detalhes do serviço..." />}
     {item && <ServiceDetailsContent item={item} profileKind={profile?.kind} sessionActive={Boolean(session)} need={need} date={date} busy={busy} submitError={submitError} submitStatus={submitStatus} createdRequest={createdRequest} onNeedChange={setNeed} onDateChange={setDate} onSubmit={reviewRequest} />}
@@ -126,12 +126,12 @@ function ServiceDetailsContent({ item, profileKind, sessionActive, need, date, b
   return <div className="service-details-layout">
     <article className="service-details-main">
       <div className="service-details-tags">
-        <span>{readableLabel(item.service.category, 'Sem categoria')}</span>
+        <span>{readableLabel(item.service.domain === 'health' ? item.service.profession : item.service.category, 'Sem categoria')}</span>
         <span>{readableLabel(item.service.modality, 'Modalidade não informada')}</span>
       </div>
       <h1>{item.service.title}</h1>
       <p className="service-details-location">{item.service.city || 'Cidade não informada'}</p>
-      <p className="service-price service-price--details"><span>{price.label}</span><strong>{price.value}</strong></p>
+      {item.service.domain !== 'health' && <p className="service-price service-price--details"><span>{price.label}</span><strong>{price.value}</strong></p>}
       <section className="service-description" aria-labelledby="service-description-title">
         <h2 id="service-description-title">Sobre o serviço</h2>
         <p>{item.service.description}</p>
@@ -148,7 +148,7 @@ function ServiceDetailsContent({ item, profileKind, sessionActive, need, date, b
       </Card>
     </article>
 
-    <aside className="request-panel" aria-labelledby="request-title">
+    {item.service.domain === 'health' ? <aside className="request-panel"><h2>Descoberta de profissionais</h2><p>Agendamento e solicitação de atendimento ainda não estão disponíveis. Não envie sintomas, exames ou informações clínicas.</p></aside> : <aside className="request-panel" aria-labelledby="request-title">
       <h2 id="request-title">Solicitar orçamento</h2>
       <p>Descreva sua necessidade para pedir uma proposta. O envio não confirma horário, contratação ou pagamento.</p>
       {profileKind === 'prestador'
@@ -170,6 +170,6 @@ function ServiceDetailsContent({ item, profileKind, sessionActive, need, date, b
             {submitStatus === 401 && <Link to="/login" state={{ from: `/servico/${item.service.id}` }}>Entrar novamente</Link>}
             <Button loading={busy}>Enviar solicitação de orçamento</Button>
           </form>}
-    </aside>
+    </aside>}
   </div>;
 }
