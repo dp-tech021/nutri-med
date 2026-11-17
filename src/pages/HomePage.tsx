@@ -52,9 +52,9 @@ export function HomePage() {
   return <Layout>
     <section className="hero" aria-labelledby="hero-title">
       <div className="hero-copy">
-        <p className="eyebrow">Serviços e orçamentos em um só lugar</p>
-        <h1 id="hero-title">Encontre quem pode ajudar no seu próximo serviço</h1>
-        <p className="hero-subtitle">A Nutri-Med conecta clientes e prestadores para descobrir serviços, solicitar orçamentos e analisar propostas com clareza.</p>
+        <p className="eyebrow">Saúde e serviços gerais</p>
+        <h1 id="hero-title">Encontre o profissional certo para o que você precisa.</h1>
+        <p className="hero-subtitle">Profissionais de saúde e prestadores de serviços em um só lugar.</p>
         <div className="hero-actions">
           <LinkButton to="/servicos">Explorar serviços <span aria-hidden="true">→</span></LinkButton>
           <LinkButton to="/#como-funciona" variant="secondary">Como funciona</LinkButton>
@@ -64,6 +64,10 @@ export function HomePage() {
       <MarketplaceIllustration />
     </section>
 
+    <section className="landing-section audience-grid" aria-label="Áreas do Nutri-Med">
+      <Card className="audience-card"><h2>Saúde</h2><p>Encontre médicos, nutricionistas, psicólogos e fisioterapeutas.</p><LinkButton to="/saude">Encontrar profissional</LinkButton></Card>
+      <Card className="audience-card"><h2>Serviços</h2><p>Encontre eletricistas, encanadores, técnicos, pintores e outros prestadores.</p><LinkButton to="/servicos">Encontrar serviço</LinkButton></Card>
+    </section>
     <section id="como-funciona" className="landing-section how-it-works" aria-labelledby="how-title">
       <div className="section-heading">
         <p className="eyebrow">Como funciona</p>
