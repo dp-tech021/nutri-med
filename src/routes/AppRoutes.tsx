@@ -35,6 +35,7 @@ export function AppRoutes() {
 
   return <Routes>
     <Route path="/" element={<HomePage />} />
+    <Route path="/saude" element={<Layout><h1>Saúde</h1><p>Área de descoberta de médicos, nutricionistas, psicólogos e fisioterapeutas.</p><p>O catálogo de saúde ainda não está disponível. Não envie sintomas, exames ou informações clínicas.</p><Link to="/">Voltar ao início</Link></Layout>} />
     <Route path="/servicos" element={<CatalogPage />} />
     <Route path="/login" element={session
       ? <Navigate to={safeInternalPath((location.state as { from?: unknown } | null)?.from)} replace />
