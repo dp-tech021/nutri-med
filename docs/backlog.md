@@ -109,3 +109,7 @@ As Issues **NM-33–NM-38** registram decisões de negócio e licenciamento que 
 - Prioridade para ferramentas gratuitas; quotas, limitações de uptime, região, SMTP e domínio precisam ser verificadas na data da implantação.
 - Não ativar faturamento, publicar produção, criar pagamento real ou coletar dados sensíveis sem decisão e autorização explícitas.
 - Nada de chaves administrativas no frontend, em commits ou em chats com IA.
+
+## Incremento de catálogo/perfis por domínio
+
+A branch `feat/nm-catalogo-perfis-por-dominio` implementa o contrato técnico de descoberta; detalhes, limites de autoria e evidências em [catálogo por domínio](catalogo-dominios.md). Permanecem pendentes aprovação da taxonomia comercial e regiões, verificação profissional oficial, formulário profissional de Saúde, atendimento/agendamento, monetização e suporte. Não encerrar NM-01 por esta implementação.

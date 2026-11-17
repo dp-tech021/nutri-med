@@ -1,6 +1,6 @@
 # Nutri-Med — MVP em desenvolvimento
 
-Plataforma única com duas áreas: Saúde e Serviços Gerais. As áreas compartilham conta, autenticação e infraestrutura, com categorias, filtros e atributos próprios previstos para a próxima etapa. Hoje somente Serviços Gerais possui catálogo; `/saude` é informativa, sem busca, agendamento ou profissionais listados. Veja [a visão do produto](docs/visao-produto.md).
+Plataforma única com duas áreas: Saúde e Serviços Gerais. As áreas compartilham conta, autenticação e infraestrutura, com categorias, filtros e atributos próprios previstos para a próxima etapa. Esta branch incremental implementa descoberta por domínio em `/saude` e `/servicos`; Saúde depende da migração, da API correspondente e da configuração de taxonomias/ofertas. Não há agendamento ou solicitação de atendimento de saúde. Veja [a visão do produto](docs/visao-produto.md).
 
 **O código desta branch ainda não foi validado de ponta a ponta. Não publicar em produção.**
 
@@ -26,7 +26,7 @@ Git, Node.js 24 LTS, npm 11 e, para a stack completa, Docker ou runtime compatí
 git clone https://github.com/dp-tech021/nutri-med.git
 cd nutri-med
 git fetch origin
-git checkout feat/nm-redefinicao-saude-servicos
+git checkout feat/nm-catalogo-perfis-por-dominio
 nvm install
 nvm use
 npm ci
@@ -110,3 +110,7 @@ Documentação oficial: https://supabase.com/docs/guides/local-development ; htt
 ## Entrega das duas áreas — PR #56
 
 A Home distingue Saúde de Serviços Gerais e preserva `/servicos`, conta, recuperação de senha, perfis, painéis e solicitações. O contrato de domínio e os limites estão em [visão do produto](docs/visao-produto.md), o conteúdo da Home em [landing](docs/landing.md) e as próximas decisões no [backlog](docs/backlog.md). `GET /health` é apenas diagnóstico da API, não um catálogo de Saúde. O backend atual ainda não implementa `MarketplaceDomain`; nenhuma migração é incluída nesta entrega.
+
+## Catálogo por domínio — etapa incremental
+
+Ver [modelo, API, recuperação e validação local](docs/catalogo-dominios.md). A entrega anterior está registrada no PR #56; este incremento parte de `63ed0ff`. Taxonomia de Saúde sem seed comercial: não há profissionais fictícios na aplicação. Registros profissionais são declarados, sem verificação oficial.

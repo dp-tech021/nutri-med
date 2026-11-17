@@ -16,3 +16,7 @@ CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium node scripts/qa-marketplace.mjs
 ```
 
 O segundo script reutiliza a estratégia do script de capturas existente: Playwright, Chromium, variável de URL/base e screenshots. Verifica Home e Saúde em 320, 375, 768, 1024 e 1440 px, menu, teclado, navegação e overflow; salva capturas e resumo em `docs/screenshots/marketplace/`. Dados sintéticos de conta são injetados apenas no contexto isolado do navegador para testar menu autenticado; sem login real ou credenciais de produção. Resultados e limites da execução desta entrega: [QA](qa-marketplace.md).
+
+## Incremento posterior ao PR #56
+
+O conteúdo acima descreve a primeira entrega histórica. Na branch `feat/nm-catalogo-perfis-por-dominio`, `/saude` passa a usar o catálogo compartilhado com filtros reais por domínio; Home e smoke foram atualizados. Ver [contrato e resultados integrados](catalogo-dominios.md) e capturas em `screenshots/domains/`. Descoberta não habilita atendimento ou agendamento.

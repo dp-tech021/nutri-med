@@ -49,3 +49,7 @@ Somente conteúdo e navegação frontend, testes e documentação. Não implemen
 > Decisão parcial: Nutri-Med é uma aplicação única com duas áreas distintas, Saúde e Serviços Gerais, compartilhando conta, autenticação, infraestrutura e design system. Serviços Gerais preserva o catálogo `/servicos` e o fluxo existente. Saúde possui somente página informativa `/saude`, sem catálogo ou atendimento implementado. O contrato futuro é `MarketplaceDomain = 'health' | 'services'`, com categorias, filtros e atributos por domínio e preservação dos registros legados como `services`. Registro profissional informado não equivale a verificação oficial. **Manter NM-01 aberta**: faltam categorias iniciais, regiões, critérios de elegibilidade e verificação profissional, monetização, regras comerciais e suporte. Não considerar Saúde concluída pelo PR #56.
 
 A atualização efetiva da issue depende de acesso de escrita ao GitHub; o texto acima é proposta, não evidência de alteração da issue.
+
+## Evolução incremental após o PR #56
+
+O texto acima registra o contrato e os limites históricos da primeira entrega. A branch `feat/nm-catalogo-perfis-por-dominio` implementa o discriminador, a migração aditiva, catálogo/perfis por domínio e descoberta de Saúde, sem atendimento ou agendamento. Ver [contrato implementado e recuperação](catalogo-dominios.md). A aprovação das categorias comerciais, regiões, critérios, monetização e suporte continua pendente na NM-01; implementação técnica não aprova a operação de Saúde.
