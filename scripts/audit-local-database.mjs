@@ -20,3 +20,13 @@ console.log(sql(`select 'constraints',count(*) from pg_constraint where connames
  union all select 'indexes',count(*) from pg_indexes where schemaname='public'
  union all select 'triggers',count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid where c.relnamespace='public'::regnamespace and not t.tgisinternal;`));
 console.log(sql('select version,name from supabase_migrations.schema_migrations order by version;'));
+
+const definers=JSON.parse(sql(`select coalesce(json_agg(json_build_object('signature',p.oid::regprocedure::text,'schema',n.nspname,'owner',pg_get_userbyid(p.proowner),'search_path',p.proconfig,'public_execute',exists(select 1 from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) a where a.grantee=0 and a.privilege_type='EXECUTE'),'anon_execute',has_function_privilege('anon',p.oid,'EXECUTE'),'authenticated_execute',has_function_privilege('authenticated',p.oid,'EXECUTE')) order by p.proname),'[]') from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prosecdef and n.nspname='public';`));
+for(const fn of definers){
+ assert.equal(fn.public_execute,false,fn.signature+' PUBLIC EXECUTE');
+ assert.equal(fn.anon_execute,false,fn.signature+' anon EXECUTE');
+ assert.equal(fn.authenticated_execute,false,fn.signature+' authenticated EXECUTE');
+ assert(fn.search_path?.some(setting=>setting==='search_path=""'||setting==='search_path='||setting==='search_path=pg_catalog'),fn.signature+' bounded search_path');
+}
+console.log('SECURITY DEFINER public:',JSON.stringify(definers));
+console.log(sql("select n.nspname,count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.prosecdef and n.nspname<>'public' group by n.nspname order by n.nspname;"));

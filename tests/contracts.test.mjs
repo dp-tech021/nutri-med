@@ -23,3 +23,12 @@ test('API autentica usuário pelo token e não pelo identificador fornecido',()=
   assert.match(api,/await ownedRequest\(/);
   assert.match(api,/UPLOAD_DISABLED_PENDING_VALIDATION/);
 });
+test('SDK da Edge Function tem versão exata alinhada ao package.json e lockfile',()=>{
+  const pkg=JSON.parse(readFileSync(new URL('../package.json',import.meta.url),'utf8'));
+  const lock=JSON.parse(readFileSync(new URL('../package-lock.json',import.meta.url),'utf8'));
+  const version=pkg.dependencies['@supabase/supabase-js'];
+  assert.match(version,/^\d+\.\d+\.\d+$/);
+  assert.equal(lock.packages['node_modules/@supabase/supabase-js'].version,version);
+  const imported=/from 'npm:@supabase\/supabase-js@([^']+)'/.exec(api);
+  assert(imported);assert.equal(imported[1],version);
+});

@@ -1,5 +1,5 @@
 import { marketplaceDomain, validateDomainFilters, publicMarketplaceProfile as publicProfile } from '../_shared/marketplace.ts';
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2.119.0';
 
 const url = Deno.env.get('SUPABASE_URL') ?? '';
 const key = Deno.env.get('SUPABASE_SECRET_KEYS')
